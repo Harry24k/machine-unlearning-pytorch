@@ -18,8 +18,7 @@ setuptools.setup(
                'finetune', 'neggrad', 'ft', 'ng', 'randomlabel', 'iu', 'ff', 'fisherforget',
               ],
     install_requires=[
-        'torch>=1.7.1', 'torchvision>=0.8.2', 'scipy>=0.14.0', 'tqdm>=4.56.1',
-        'requests~=2.25.1', 'numpy>=1.19.4',
+        'torch>=1.7.1', 'torchvision>=0.8.2', 'numpy>=1.19.4',
     ],
     python_requires = '>=3',
     zip_safe = False,
