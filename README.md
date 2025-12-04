@@ -334,6 +334,7 @@ If you use this package in your research, please cite:
 ## :memo: TODO List
 [] Extend this package to support LLM unlearning.
 [] Modify the logging/recording modules to ensure compatibility with TensorBoard.
+[] Upload models
 [] ...
 
 ## :mortar_board: Getting Help
