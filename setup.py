@@ -23,7 +23,7 @@ setuptools.setup(
     python_requires = '>=3',
     zip_safe = False,
     license="MIT",
-    url = https://github.com/Harry24k/machine-unlearning-pytorch',
+    url = 'https://github.com/Harry24k/machine-unlearning-pytorch',
     
     classifiers = [
     # How mature is this project? Common values are
