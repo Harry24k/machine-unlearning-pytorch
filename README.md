@@ -146,19 +146,14 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 
 ### Unlearning Methods
 
-
-
-|  **Method**  | **Description** | **Reference** |
+|  **Training-based Method**  | **Description** | **Reference** |
 |:------------:|-----------------|---------------|
 | **Finetune** | Retrain on retain set only | Baseline method |
 | **NegGrad** | Negative gradient descent on forget set | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
 | **RandomLabel** | Train forget set with random labels | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
 | **L1Sparse** | L1 sparsity regularization | [Jia et al., 2023](https://proceedings.neurips.cc/paper_files/paper/2023/hash/a204aa68ab4e970e1ceccfb5b5cdc5e4-Abstract-Conference.html) |
 | **UAM** | Unlearning-Aware Minimization | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
-
-### Non-Training Methods
-
-|  **Method**  | **Description** | **Reference** |
+|  **Non-Training Method**  | **Description** | **Reference** |
 |:------------:|-----------------|---------------|
 | **FisherForget** | Fisher information matrix-based | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
 | **Influence** | Influence function with Newton's method | [Izzo et al., 2021](https://proceedings.mlr.press/v130/izzo21a.html) |
