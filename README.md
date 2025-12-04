@@ -332,14 +332,6 @@ If you use this package in your research, please cite:
 [] Upload models
 [] ...
 
-## :mortar_board: Getting Help
-
-If you have questions or need help:
-
-1. Check the [demo notebook](demo.ipynb) for examples
-2. Review the [demo script](demo.py) for code usage
-3. Open an issue on GitHub
-
 ## :handshake: Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
