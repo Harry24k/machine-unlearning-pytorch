@@ -45,6 +45,32 @@ trainer.fit(train_loaders=train_loaders['Retain'], n_epochs=5,
             save_path="./models/unlearned")
 ```
 
+
+## :bar_chart: Key Features
+
+### Data Setup Utilities
+
+- **UnlearnDataSetup**: Automatic data splitting for unlearning scenarios
+- **MergedLoaders**: Combine multiple data loaders (Retain + Forget)
+- Support for multiple datasets: CIFAR10, CIFAR100, TinyImageNet, MNIST variants
+
+### Unified Interface
+
+All unlearning methods follow a consistent PyTorch-like API:
+```python
+# Initialize
+trainer = UnlearningMethod(rmodel, **method_params)
+
+# Setup training
+trainer.setup(optimizer="...", scheduler="...", n_epochs=...)
+
+# Train (unlearn)
+trainer.fit(train_loaders=..., n_epochs=..., save_path="...")
+
+# Evaluate
+accuracy = rmodel.eval_accuracy(data_loader=test_loader)
+```
+
 ## :hammer: Requirements and Installation
 
 **Requirements**
@@ -68,12 +94,6 @@ pip install -e .
 ```
 
 ## :rocket: Getting Started
-
-**Precautions**
-
-* **All models should return ONLY ONE vector of `(N, C)` where `C = number of classes`.** Similar to torchvision.models, torchunlearn expects the model output to be `(N, C)` where `N` is the number of inputs and `C` is the number of classes.
-* **The domain of inputs should be in the range of [0, 1]**. Use the normalization parameters in RobModel to handle different preprocessing requirements.
-* **Data split**: Machine unlearning requires splitting data into **Retain** (data to keep), **Forget** (data to remove), and **Test** sets. Torchunlearn provides utilities to easily create these splits.
 
 **[Demo](https://github.com/Harry24k/machine-unlearning-pytorch/blob/master/demo.ipynb)**
 
@@ -125,6 +145,23 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 ```
 
 ### Unlearning Methods
+
+
+
+|  **Method**  | **Description** | **Reference** |
+|:------------:|-----------------|---------------|
+| **Finetune** | Retrain on retain set only | Baseline method |
+| **NegGrad** | Negative gradient descent on forget set | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
+| **RandomLabel** | Train forget set with random labels | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
+| **L1Sparse** | L1 sparsity regularization | [Jia et al., 2023](https://proceedings.neurips.cc/paper_files/paper/2023/hash/a204aa68ab4e970e1ceccfb5b5cdc5e4-Abstract-Conference.html) |
+| **UAM** | Unlearning-Aware Minimization | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
+
+### Non-Training Methods
+
+|  **Method**  | **Description** | **Reference** |
+|:------------:|-----------------|---------------|
+| **FisherForget** | Fisher information matrix-based | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
+| **Influence** | Influence function with Newton's method | [Izzo et al., 2021](https://proceedings.mlr.press/v130/izzo21a.html) |
 
 **Finetune** - Simply retrain on retain set:
 
@@ -240,50 +277,6 @@ trainer.fit(
 )
 ```
 
-## :page_with_curl: Supported Methods
-
-### Training-Based Methods
-
-|  **Method**  | **Description** | **Reference** |
-|:------------:|-----------------|---------------|
-| **Finetune** | Retrain on retain set only | Baseline method |
-| **NegGrad** | Negative gradient descent on forget set | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **RandomLabel** | Train forget set with random labels | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **L1Sparse** | L1 sparsity regularization | [Jia et al., 2023](https://proceedings.neurips.cc/paper_files/paper/2023/hash/a204aa68ab4e970e1ceccfb5b5cdc5e4-Abstract-Conference.html) |
-| **UAM** | Unlearning-Aware Minimization | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
-
-### Non-Training Methods
-
-|  **Method**  | **Description** | **Reference** |
-|:------------:|-----------------|---------------|
-| **FisherForget** | Fisher information matrix-based | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **Influence** | Influence function with Newton's method | [Izzo et al., 2021](https://proceedings.mlr.press/v130/izzo21a.html) |
-
-## :bar_chart: Key Features
-
-### Data Setup Utilities
-
-- **UnlearnDataSetup**: Automatic data splitting for unlearning scenarios
-- **MergedLoaders**: Combine multiple data loaders (Retain + Forget)
-- Support for multiple datasets: CIFAR10, CIFAR100, TinyImageNet, MNIST variants
-
-### Unified Interface
-
-All unlearning methods follow a consistent PyTorch-like API:
-```python
-# Initialize
-trainer = UnlearningMethod(rmodel, **method_params)
-
-# Setup training
-trainer.setup(optimizer="...", scheduler="...", n_epochs=...)
-
-# Train (unlearn)
-trainer.fit(train_loaders=..., n_epochs=..., save_path="...")
-
-# Evaluate
-accuracy = rmodel.eval_accuracy(data_loader=test_loader)
-```
-
 ## :bulb: Understanding Machine Unlearning
 
 **Why Machine Unlearning?**
@@ -315,32 +308,6 @@ Epoch   Cost     Clean(R)   Clean(F)   Clean(Te)
 4       0.0525   96.58%     45.02%     90.04%     
 5       0.1073   97.36%     33.01%     91.41%     
 =====================================================
-```
-
-## :file_folder: Repository Structure
-
-```
-machine-unlearning-pytorch/
-├── torchunlearn/
-│   ├── nn/                    # Neural network modules
-│   │   ├── robmodel.py        # Robust model wrapper
-│   │   └── modules/           # Custom layers
-│   ├── unlearn/               # Unlearning methods
-│   │   ├── trainers/          # Gradient-based methods
-│   │   │   ├── finetune.py
-│   │   │   ├── neggrad.py
-│   │   │   ├── randomlabel.py
-│   │   │   └── l1sparse.py
-│   │   └── nontrainers/       # Non-gradient methods
-│   │       ├── fisherforget.py
-│   │       └── influence.py
-│   └── utils/                 # Utilities
-│       ├── data.py            # Data setup
-│       ├── models/            # Model architectures
-│       └── datasets/          # Dataset loaders
-├── demo.py                    # Demo script
-├── demo.ipynb                 # Demo notebook
-└── README.md                  # This file
 ```
 
 ## :link: Related Projects
