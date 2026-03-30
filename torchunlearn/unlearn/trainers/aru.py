@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from .unleaner import Unlearner
 from ...attacks.attack import Attack
 
-class ARU(Attack, Unlearner):
+class ARU(Attack, Unlearner): 
     r"""
     Attributes:
         self.rmodel : rmodel.
