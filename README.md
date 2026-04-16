@@ -157,6 +157,7 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 |:------------:|-----------------|---------------|
 | **FisherForget** | Fisher information matrix-based | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
 | **Influence** | Influence function with Newton's method | [Izzo et al., 2021](https://proceedings.mlr.press/v130/izzo21a.html) |
+| **NegMerge** | Consensual weight negation for unlearning | [Kim et al., 2025](https://icml.cc/virtual/2025/poster/44843) |
 
 **Finetune** - Simply retrain on retain set:
 
