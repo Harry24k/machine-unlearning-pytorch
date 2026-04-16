@@ -247,6 +247,22 @@ unlearner.fit(train_loaders,
               save_path="./models/influence")
 ```
 
+**NegMerge** - Consensual weight negation for unlearning (ICML 2025) :
+
+```python
+from torchunlearn.unlearn.nontrainers.negmerge import NegMerge
+
+unlearner = NegMerge(rmodel)
+unlearner.fit(train_loaders,              
+              lrs=[1e-4, 5e-4, 1e-3],    
+              epochs=1,                    
+              repeats=3,                   
+              scaling=1.0,                
+              consensus_ratio=1.0,         
+              aggregation="mean",          
+              save_path="./models/negmerge")
+```
+
 ### Evaluation
 
 Track performance during unlearning:
