@@ -67,6 +67,30 @@ class Unlearn:
                     save_type=None, save_overwrite=self.overwrite, record_type=self.record_type)
         return rmodel
         
+    def uam(self, epoch, lr, momentum=0.9, weight_decay=5e-4, scheduler=None, rho=0.1, cosine_rho=True, gamma=0.0, n_validation=1e10):
+        rmodel = self.get_rmodel()
+        train_loaders = self.train_loaders 
+        test_loaders = self.test_loaders
+        
+        from .trainers.standard import Standard
+        trainer = Standard(rmodel)
+        merged_train_loader = MergedLoaders(train_loaders)
+        if cosine_rho:
+            minimizer = f"UAM(rho={rho}, cosine_total_step={epoch*len(merged_train_loader)}, gamma={gamma}, record=False)"
+        else:
+            minimizer = f"UAM(rho={rho}, gamma={gamma}, record=False)"
+        
+        trainer.setup(optimizer=f"SGD(lr={lr}, momentum={momentum}, weight_decay={weight_decay})",
+                      scheduler=scheduler, scheduler_type=None,
+                      minimizer=minimizer, n_epochs=epoch,
+                     )
+        
+        trainer.record_rob(self.loaders_with_flags, n_limit=n_validation)
+        trainer.fit(train_loaders=merged_train_loader, n_epochs=epoch,
+                    save_path=self.save_path, save_best=self.save_best,
+                    save_type=None, save_overwrite=self.overwrite, record_type="Epoch")
+        return rmodel
+        
     def influence(self, alphas=[1, 10, 20, 30, 50, 100], repeat=3):
         rmodel = self.get_rmodel()
         train_loaders = self.train_loaders
@@ -85,6 +109,22 @@ class Unlearn:
         from .nontrainers.fisherforget import FisherForget
         trainer = FisherForget(rmodel)
         trainer.fit(train_loaders, save_path=self.save_path, alphas=alphas, repeat=repeat, omit_label=omit_label, overwrite=self.overwrite)
+        return rmodel
+
+    def negmerge(self, lrs=[1e-4, 5e-4, 1e-3], epochs=1, repeats=3,
+                 scaling=1.0,
+                 consensus_ratio=1.0, aggregation="mean"
+                 ):
+
+        rmodel = self.get_rmodel()
+        train_loaders = self.train_loaders
+
+        from .nontrainers.negmerge import NegMerge
+        trainer = NegMerge(rmodel)
+        trainer.fit(train_loaders, lrs=lrs, epochs=epochs, repeats=repeats,
+                    scaling=scaling,
+                    consensus_ratio=consensus_ratio, aggregation=aggregation,
+                    save_path=self.save_path, overwrite=self.overwrite)
         return rmodel
 
     def check_omit_label(self, n_check_batches=5):
