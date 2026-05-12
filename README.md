@@ -117,7 +117,7 @@ train_shuffle_and_transform=True
 ### Training-based Methods
 
 | Method | Description | Reference |
-|:------:|-------------|-----------|
+|:------:|:-------------:|:-----------:|
 | **Finetune** | Retrain on retain set only | Baseline |
 | **NegGrad** | Negative gradient on forget set | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
 | **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
@@ -132,7 +132,7 @@ train_shuffle_and_transform=True
 ### Non-Training Methods
 
 | Method | Description | Reference |
-|:------:|-------------|-----------|
+|:------:|:-------------:|:-----------:|
 | **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
 | **Influence** | Newton-step influence function removal | [Izzo et al., 2021](https://arxiv.org/abs/2012.09822) |
 | **Amnesiac** | Revert learning from specific training batches | [Graves et al., 2021](https://arxiv.org/abs/2010.10981) |
