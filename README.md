@@ -122,11 +122,11 @@ train_shuffle_and_transform=True
 | **NegGrad** | Negative gradient on forget set | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
 | **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
 | **L1Sparse** | L1 sparsity regularization on forget set | [Jia et al., 2023](https://arxiv.org/abs/2304.04934) |
-| **UAM** | Unlearning-Aware Minimization | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
 | **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., 2023](https://arxiv.org/abs/2302.09621) |
 | **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., 2023](https://arxiv.org/abs/2205.08096) |
-| **BoundaryShrink** | Nearest-class re-targeting to shrink forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2301.11557) |
+| **BoundaryShrink** | Nearest-class re-targeting to shrink forget-class boundary | [Chen et al., 2023](https://arxiv.org/abs/2301.11557) |
 | **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., 2024](https://arxiv.org/abs/2304.04934) |
+| **UAM** | Unlearning-Aware Minimization | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
 | **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
 
 ### Non-Training Methods
@@ -135,8 +135,8 @@ train_shuffle_and_transform=True
 |:------:|-------------|-----------|
 | **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
 | **Influence** | Newton-step influence function removal | [Izzo et al., 2021](https://arxiv.org/abs/2012.09822) |
-| **NegMerge** | Consensual weight negation for unlearning | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
 | **Amnesiac** | Revert learning from specific training batches | [Graves et al., 2021](https://arxiv.org/abs/2010.10981) |
+| **NegMerge** | Consensual weight negation for unlearning | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
 
 <details>
 <summary>Click to expand usage examples</summary>
