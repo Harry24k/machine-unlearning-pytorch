@@ -222,7 +222,7 @@ Results averaged over 3 seeds.
 | NegMerge | 99.46% | 99.24% | 93.01% | — |
 | Amnesiac | 99.98% | 99.94% | 94.48% | — |
 
-### 🏷️ Classwise Forgetting — Forget "Automobile" (class 1)
+### 🏷️ Classwise Forgetting — Forget "Automobile"
 
 | Method | Acc(R) | Acc(F) | Acc(Te) | Gap |
 |--------|:------:|:------:|:-------:|:---:|
