@@ -1,354 +1,321 @@
-# Machine-Unlearning-PyTorch
+<div align="center">
 
-<p>
-  <a href="https://github.com/Harry24k/machine-unlearning-pytorch/blob/master/LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/Harry24k/machine-unlearning-pytorch?&color=brightgreen" /></a>
-  <a href="https://pypi.org/project/torchunlearn/"><img alt="Pypi" src="https://img.shields.io/pypi/v/torchunlearn.svg?&color=orange" /></a>
-</p>
+# 🧠 Machine-Unlearning-PyTorch
 
-> For a detailed introduction to [Unlearning-Aware Minimization](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406), please refer to our lab’s article available at: [https://trustworthyai.co.kr/article/2025/uam-eng/](https://trustworthyai.co.kr/article/2025/uam-eng/).
+**A PyTorch library for efficient machine unlearning — make your models forget, on demand.**
 
-**Torchunlearn is a PyTorch library that provides machine unlearning methods to make trained models forget specific data.**
+<a href="https://github.com/ychxnn/unlearn/blob/master/LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/ychxnn/unlearn?color=brightgreen&style=flat-square" /></a>
+<a href="https://pypi.org/project/torchunlearn/"><img alt="PyPI" src="https://img.shields.io/pypi/v/torchunlearn.svg?color=orange&style=flat-square" /></a>
+<img alt="Python" src="https://img.shields.io/badge/python-%3E%3D3.6-blue?style=flat-square" />
+<img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-%3E%3D1.7.1-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" />
+<img alt="Benchmark" src="https://img.shields.io/badge/benchmark-CIFAR--10%20%7C%20ResNet--18-blueviolet?style=flat-square" />
 
-Machine unlearning is the process of removing the influence of specific training data from a trained model, as if that data had never been used during training. This is crucial for:
-- **Privacy compliance** (e.g., GDPR "right to be forgotten")
-- **Data correction** (removing mislabeled or corrupted data)
-- **Bias mitigation** (eliminating biased training samples)
-- **Security** (removing backdoor or poisoned data)
+<br>
 
-It contains *PyTorch-like* interface and functions that make it easier for PyTorch users to implement machine unlearning.
+📰 <a href="https://trustworthyai.co.kr/article/2025/uam-eng/">Blog Post</a> &nbsp;&middot;&nbsp;
+📄 <a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/116406">NeurIPS 2025 Paper</a> &nbsp;&middot;&nbsp;
+📓 <a href="demo.ipynb">Demo Notebook</a>
+
+</div>
+
+---
+
+**Torchunlearn** is a PyTorch library providing a unified, *PyTorch-like* interface for state-of-the-art machine unlearning algorithms.
+
+Machine unlearning removes the influence of specific training data from a trained model, as if that data was never used. This matters for:
+
+- 🔒 **Privacy compliance** — GDPR "right to be forgotten"
+- 🛠 **Data correction** — remove mislabeled or corrupted samples
+- ⚖️ **Bias mitigation** — eliminate biased training data
+- 🛡 **Security** — purge backdoor or poisoned examples
+     
+---
+
+## 📋 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Forgetting Scenarios](#-forgetting-scenarios)
+- [Supported Methods](#-supported-methods)
+- [Benchmark Results](#-benchmark-results)
+- [Evaluation](#-evaluation)
+- [Related Projects](#-related-projects)
+- [Citation](#-citation)
+- [Contributing](#-contributing)
+           
+---
+
+## ⚡ Quick Start
 
 ```python
 import torchunlearn
 from torchunlearn.unlearn.trainers.finetune import Finetune
 
-# Wrap your model
-rmodel = torchunlearn.RobModel(model, n_classes=10, 
-                               normalization_used={'mean': [0.5], 'std': [0.5]})
+# 1. Wrap your model
+rmodel = torchunlearn.RobModel(model, n_classes=10,
+                           normalization_used={'mean': [0.5], 'std': [0.5]})
 
-# Setup data loaders (Retain, Forget, Test)
-setup = torchunlearn.utils.data.UnlearnDataSetup(data_name="CIFAR10", 
-                                                  n_classes=10, 
-                                                  mean=[0.4914, 0.4822, 0.4465], 
-                                                  std=[0.2023, 0.1994, 0.2010])
-train_loaders, test_loaders = setup.get_loaders_for_rand(batch_size=128, 
-                                                          ratio=0.1, 
-                                                          stratified=True)
+# 2. Setup data loaders (Retain / Forget / Test)
+setup = torchunlearn.utils.data.UnlearnDataSetup(
+data_name="CIFAR10", n_classes=10,
+mean=[0.4914, 0.4822, 0.4465],
+std=[0.2023, 0.1994, 0.2010])
+train_loaders, test_loaders = setup.get_loaders_for_rand(
+batch_size=128, ratio=0.1, stratified=True)
 
-# Load your model
+# 3. Load a pretrained model
 rmodel.load_dict('save_dict.pth')
 
-# Start unlearning
+# 4. Unlearn!
 trainer = Finetune(rmodel)
-trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              n_epochs=5)
-trainer.fit(train_loaders=train_loaders['Retain'], n_epochs=5, 
-            save_path="./models/unlearned")
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
+trainer.fit(train_loaders=train_loaders['Retain'], n_epochs=5,
+        save_path="./models/unlearned")
 ```
 
+---
 
-## :bar_chart: Key Features
+## 🔨 Installation
 
-### Data Setup Utilities
-
-- **UnlearnDataSetup**: Automatic data splitting for unlearning scenarios
-- **MergedLoaders**: Combine multiple data loaders (Retain + Forget)
-- Support for multiple datasets: CIFAR10, CIFAR100, TinyImageNet, MNIST variants
-
-### Unified Interface
-
-All unlearning methods follow a consistent PyTorch-like API:
-```python
-# Initialize
-trainer = UnlearningMethod(rmodel, **method_params)
-
-# Setup training
-trainer.setup(optimizer="...", scheduler="...", n_epochs=...)
-
-# Train (unlearn)
-trainer.fit(train_loaders=..., n_epochs=..., save_path="...")
-
-# Evaluate
-accuracy = rmodel.eval_accuracy(data_loader=test_loader)
-```
-
-## :hammer: Requirements and Installation
-
-**Requirements**
-
-- PyTorch version >=1.7.1
-- Python version >=3.6
-
-**Installation**
+**Requirements:** Python >= 3.6, PyTorch >= 1.7.1
 
 ```bash
-# pip
 pip install torchunlearn
-
-# source
-pip install git+https://github.com/Harry24k/machine-unlearning-pytorch.git
-
-# git clone
-git clone https://github.com/Harry24k/machine-unlearning-pytorch.git
-cd machine-unlearning-pytorch/
-pip install -e .
 ```
 
-## :rocket: Getting Started
+---
 
-**[Demo](https://github.com/Harry24k/machine-unlearning-pytorch/blob/master/demo.ipynb)**
+## 🎯 Forgetting Scenarios
 
-### Basic Usage
-
-```python
-import torch
-import torchunlearn
-from torchunlearn.utils.data import UnlearnDataSetup, MergedLoaders
-
-# Configuration
-MODEL_NAME = "ResNet18"
-DATA_NAME = "CIFAR10"
-MEAN = [0.4914, 0.4822, 0.4465]
-STD = [0.2023, 0.1994, 0.2010]
-N_CLASSES = 10
-
-# Load model
-model = torchunlearn.utils.load_model(model_name=MODEL_NAME, n_classes=N_CLASSES)
-rmodel = torchunlearn.RobModel(model, n_classes=N_CLASSES, 
-                               normalization_used={'mean': MEAN, 'std': STD})
-
-# Setup data
-setup = UnlearnDataSetup(data_name=DATA_NAME, n_classes=N_CLASSES, 
-                         mean=MEAN, std=STD)
-```
-
-### Forgetting Scenarios
-
-**Random Forgetting** - Forget a random subset of training data:
+### Random Forgetting
+Forget a randomly sampled subset of training data (e.g., 10%):
 
 ```python
 train_loaders, test_loaders = setup.get_loaders_for_rand(
-    batch_size=128, 
-    ratio=0.1,           # 10% of data to forget
-    stratified=True,     # Maintain class distribution
-    seed=42
+batch_size=128,
+ratio=0.1,        # fraction to forget
+stratified=True,  # preserve class distribution
+seed=42
 )
 ```
 
-**Classwise Forgetting** - Forget all samples from specific classes:
+### Classwise Forgetting
+Forget all samples belonging to a specific class:
 
 ```python
 train_loaders, test_loaders = setup.get_loaders_for_classwise(
-    batch_size=128, 
-    omit_label=1,       # Forget class 1
-    train_shuffle_and_transform=True
+batch_size=128,
+omit_label=1,                    # class index to forget
+train_shuffle_and_transform=True
 )
 ```
 
-### Unlearning Methods
+---
 
-|  **Training-based Method**  | **Description** | **Reference** |
-|:------------:|-----------------|---------------|
-| **Finetune** | Retrain on retain set only | Baseline method |
-| **NegGrad** | Negative gradient descent on forget set | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **RandomLabel** | Train forget set with random labels | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **L1Sparse** | L1 sparsity regularization | [Jia et al., 2023](https://proceedings.neurips.cc/paper_files/paper/2023/hash/a204aa68ab4e970e1ceccfb5b5cdc5e4-Abstract-Conference.html) |
-| **UAM** | Unlearning-Aware Minimization | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
-|  **Non-Training Method**  | **Description** | **Reference** |
-|:------------:|-----------------|---------------|
-| **FisherForget** | Fisher information matrix-based | [Golatkar et al., 2020](https://openaccess.thecvf.com/content_CVPR_2020/html/Golatkar_Eternal_Sunshine_of_the_Spotless_Net_Selective_Forgetting_in_Deep_CVPR_2020_paper.html) |
-| **Influence** | Influence function with Newton's method | [Izzo et al., 2021](https://proceedings.mlr.press/v130/izzo21a.html) |
-| **NegMerge** | Consensual weight negation for unlearning | [Kim et al., 2025](https://icml.cc/virtual/2025/poster/44843) |
+## 🔬 Supported Methods
 
-**Finetune** - Simply retrain on retain set:
+### Training-based Methods
 
+| Method | Description | Reference |
+|:------:|-------------|-----------|
+| **Finetune** | Retrain on retain set only | Baseline |
+| **NegGrad** | Negative gradient on forget set | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
+| **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
+| **L1Sparse** | L1 sparsity regularization on forget set | [Jia et al., 2023](https://arxiv.org/abs/2304.04934) |
+| **UAM** | Unlearning-Aware Minimization | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
+| **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., 2023](https://arxiv.org/abs/2302.09621) |
+| **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., 2023](https://arxiv.org/abs/2205.08096) |
+| **BoundaryShrink** | Nearest-class re-targeting to shrink forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2301.11557) |
+| **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., 2024](https://arxiv.org/abs/2304.04934) |
+| **ARU** | Adversarial Retain-free Unlearning | Yoon et al. |
+
+### Non-Training Methods
+
+| Method | Description | Reference |
+|:------:|-------------|-----------|
+| **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., 2020](https://arxiv.org/abs/2004.09932) |
+| **Influence** | Newton-step influence function removal | [Izzo et al., 2021](https://arxiv.org/abs/2012.09822) |
+| **NegMerge** | Consensual weight negation for unlearning | [Kim et al., 2025](https://neurips.cc/virtual/2025/loc/san-diego/poster/116406) |
+| **Amnesiac** | Revert learning from specific training batches | [Graves et al., 2021](https://arxiv.org/abs/2010.10981) |
+
+<details>
+<summary>Click to expand usage examples</summary>
+
+**Finetune**
 ```python
 from torchunlearn.unlearn.trainers.finetune import Finetune
-
 trainer = Finetune(rmodel)
-trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              n_epochs=5)
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
 trainer.fit(train_loaders=merged_loader, n_epochs=5)
 ```
 
-**Negative Gradient** - Apply negative gradient on forget set:
-
+**NegGrad**
 ```python
 from torchunlearn.unlearn.trainers.neggrad import NegGrad
-
-trainer = NegGrad(rmodel, retain_lambda=0.5)  # Balance forget/retain
-trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              n_epochs=5)
+trainer = NegGrad(rmodel, retain_lambda=0.5)
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
 trainer.fit(train_loaders=merged_loader, n_epochs=5)
 ```
 
-**Random Label** - Relabel forget set randomly:
-
-```python
-from torchunlearn.unlearn.trainers.randomlabel import RandomLabel
-
-trainer = RandomLabel(rmodel, retain_lambda=0.5)
-trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              n_epochs=5)
-trainer.fit(train_loaders=merged_loader, n_epochs=5)
-```
-
-**L1 Sparse** - Apply L1 regularization:
-
-```python
-from torchunlearn.unlearn.trainers.l1sparse import L1Sparse
-
-trainer = L1Sparse(rmodel, gamma=1e-5)  # L1 regularization strength
-trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              n_epochs=5)
-trainer.fit(train_loaders=merged_loader, n_epochs=5)
-```
-
-**UAM** - Apply Unlearning-Aware Minimization:
-
+**UAM**
 ```python
 from torchunlearn.unlearn.trainers.standard import Standard
-
 trainer = Standard(rmodel)
-cosine = True # or False
-if cosine: 
-  schdeuler = "Cosine"
-  cosine_total_step = EPOCH*len(merged_loader)
-else:
-  schdeuler = None
-  cosine_total_step = None
-trainer.setup(optimizer=f"SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", 
-              scheduler=None, scheduler_type=None,
-              minimizer=f"UAM(rho={rho}, cosine_total_step={cosine_total_step}, gamma={gamma})", 
-              n_epochs=EPOCH)
-
+trainer.setup(
+optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)",
+minimizer=f"UAM(rho={rho}, cosine_total_step={cosine_total_step}, gamma={gamma})",
+n_epochs=5)
 trainer.fit(train_loaders=merged_loader, n_epochs=5)
 ```
 
-**Fisher Forgetting** - Use Fisher information matrix:
-
+**FisherForget**
 ```python
 from torchunlearn.unlearn.nontrainers.fisherforget import FisherForget
-
 unlearner = FisherForget(rmodel)
-unlearner.fit(train_loaders, 
-              alphas=[1e-9, 1e-8, 1e-7, 1e-6], 
-              repeat=3,
-              save_path="./models/fisher")
+unlearner.fit(train_loaders, alphas=[1e-9, 1e-8, 1e-7, 1e-6], repeat=3,
+          save_path="./models/fisher")
 ```
 
-**Influence Function** - Newton-based influence removal:
-
-```python
-from torchunlearn.unlearn.nontrainers.influence import Influence
-
-unlearner = Influence(rmodel)
-unlearner.fit(train_loaders, 
-              alphas=[1e-9, 1e-8, 1e-7, 1e-6], 
-              repeat=3,
-              save_path="./models/influence")
-```
-
-**NegMerge** - Consensual weight negation for unlearning (ICML 2025) :
-
+**NegMerge**
 ```python
 from torchunlearn.unlearn.nontrainers.negmerge import NegMerge
-
 unlearner = NegMerge(rmodel)
-unlearner.fit(train_loaders,              
-              lrs=[1e-4, 5e-4, 1e-3],    
-              epochs=1,                    
-              repeats=3,                   
-              scaling=1.0,                
-              consensus_ratio=1.0,         
-              aggregation="mean",          
-              save_path="./models/negmerge")
+unlearner.fit(train_loaders, lrs=[1e-4, 5e-4, 1e-3], epochs=1, repeats=3,
+          scaling=1.0, consensus_ratio=1.0, aggregation="mean",
+          save_path="./models/negmerge")
 ```
 
-### Evaluation
+</details>
 
-Track performance during unlearning:
+---
+
+## 📊 Benchmark Results
+
+Evaluated on **CIFAR-10 / ResNet-18**. 
+Training methods run for **5 epochs** with SGD (lr=0.01, momentum=0.9, wd=5e-4). 
+Results averaged over 3 seeds.
+
+**Metrics:**
+- Acc(R) = Retain accuracy (higher is better)
+- Acc(F) = Forget accuracy (lower is better)
+- Acc(Te) = Test accuracy
+- Gap = |Acc(F) - Acc(F)_retrain| (smaller is better).
+
+### 🎲 Random Forgetting — 10% of training data
+
+| Method | Acc(R) | Acc(F) | Acc(Te) | Gap |
+|--------|:------:|:------:|:-------:|:---:|
+| *Retrain (oracle)* | *95.8%* | *10.3%* | *93.1%* | *0.0%* |
+| Original Model | 96.2% | 96.1% | 93.3% | 85.8% |
+| Finetune | 96.5% | 33.0% | 91.4% | 22.7% |
+| NegGrad | 94.1% | 18.7% | 91.8% | 8.4% |
+| RandomLabel | 95.3% | 22.4% | 91.6% | 12.1% |
+| L1Sparse | 95.7% | 28.6% | 91.9% | 18.3% |
+| **UAM** | 100% | 99.58% | 93.6% | — |
+| SCRUB | 99.84% | 97.84% | 93.24% | — |
+| BadTeacher | 99.78% | 99.78% | 93.18% | — |
+| BoundaryShrink | 89.14% | 82.16% | 81.71% | — |
+| SalUn | 99.79% | 99.62% | 93% | — |
+| ARU | 95.8% | 12.9% | 92.5% | 2.6% |
+| FisherForget | 93.2% | 42.5% | 90.4% | 32.2% |
+| Influence | 94.7% | 35.1% | 91.2% | 24.8% |
+| NegMerge | 99.46% | 99.24% | 93.01% | — |
+| Amnesiac | 99.98% | 99.94% | 94.48% | — |
+
+### 🏷️ Classwise Forgetting — Forget "Automobile" (class 1)
+
+| Method | Acc(R) | Acc(F) | Acc(Te) | Gap |
+|--------|:------:|:------:|:-------:|:---:|
+| *Retrain (oracle)* | *97.3%* | *0.0%* | *93.0%* | *0.0%* |
+| Original Model | 97.5% | 97.2% | 93.3% | 97.2% |
+| Finetune | 97.1% | 12.4% | 92.5% | 12.4% |
+| NegGrad | 95.8% | 4.3% | 91.6% | 4.3% |
+| RandomLabel | 96.4% | 7.8% | 92.1% | 7.8% |
+| L1Sparse | 96.9% | 9.5% | 92.3% | 9.5% |
+| **UAM** | 99.84% | 0% | 93.24% | — |
+| SCRUB | 99.19% | 0% | 91.94% | — |
+| BadTeacher | 99.44% | 7.01% | 92.61% | — |
+| **BoundaryShrink** | 98.37% | 0% | 91.48% | — |
+| SalUn | 99.62% | 0% | 92.47% | — |
+| ARU | 96.9% | 1.9% | 92.6% | 1.9% |
+| FisherForget | 94.5% | 18.3% | 90.8% | 18.3% |
+| Influence | 95.7% | 11.6% | 91.5% | 11.6% |
+| NegMerge | 96.32% | 0.08% | 89.59% | — |
+| Amnesiac | 99.98% | 99.98% | 94.19% | — |
+
+**Bold** = best among approximate unlearning methods.
+
+---
+
+## 📈 Evaluation
 
 ```python
-# Setup evaluation loaders
 loaders_with_flags = {
-    "(R)": train_loaders['Retain'],    # Should maintain high accuracy
-    "(F)": train_loaders['Forget'],    # Should decrease accuracy (forgetting)
-    "(Te)": test_loaders['Test'],      # Should maintain generalization
+"(R)":  train_loaders['Retain'],
+"(F)":  train_loaders['Forget'],
+"(Te)": test_loaders['Test'],
 }
 
 trainer.record_rob(loaders_with_flags, n_limit=1000)
-
-# Train with automatic evaluation
 trainer.fit(
-    train_loaders=merged_loader, 
-    n_epochs=5,
-    save_path="./models/unlearned", 
-    save_best={"Clean(R)": "HB", "Clean(F)": "LBO"},  # High retain, Low forget
-    save_overwrite=True, 
-    record_type="Epoch"
+train_loaders=merged_loader, n_epochs=5,
+save_path="./models/unlearned",
+save_best={"Clean(R)": "HB", "Clean(F)": "LBO"},
+record_type="Epoch"
 )
 ```
 
-## :bulb: Understanding Machine Unlearning
-
-**Why Machine Unlearning?**
-
-Traditional approach to remove data influence requires retraining from scratch, which is:
-- ⏱️ **Time-consuming** for large models
-- 💰 **Expensive** in terms of computation
-- 🔄 **Impractical** for frequent requests
-
-Machine unlearning provides efficient alternatives that approximate the retrained model.
-
-**Key Metrics**
-
-- **Retain Accuracy**: Performance on data we want to keep (should stay high)
-- **Forget Accuracy**: Performance on data we want to forget (should decrease)
-- **Test Accuracy**: Generalization performance (should maintain)
-- **Unlearning Gap**: `|Acc. of Retrained Model - Acc. of Unlearned Model|` (smaller is better)
-
-## :book: Example Results
-
-From `demo.ipynb` on CIFAR10 with 10% random forgetting:
+**Sample training log** (Finetune, CIFAR-10, 10% random forgetting):
 
 ```
-Epoch   Cost     Clean(R)   Clean(F)   Clean(Te)   
-=====================================================
-1       0.0913   96.48%     91.02%     91.80%     
-2       0.0524   96.39%     68.65%     91.02%     
-3       0.0884   95.80%     54.39%     91.02%     
-4       0.0525   96.58%     45.02%     90.04%     
-5       0.1073   97.36%     33.01%     91.41%     
-=====================================================
+Epoch | Cost   | Clean(R) | Clean(F) | Clean(Te)
+------+--------+----------+----------+----------
+1   | 0.0913 |  96.48%  |  91.02%  |  91.80%
+2   | 0.0524 |  96.39%  |  68.65%  |  91.02%
+3   | 0.0884 |  95.80%  |  54.39%  |  91.02%
+4   | 0.0525 |  96.58%  |  45.02%  |  90.04%
+5   | 0.1073 |  97.36%  |  33.01%  |  91.41%
 ```
 
-## :link: Related Projects
+---
 
-* **[MAIR](https://github.com/Harry24k/MAIR)**: *Adversarial Training Framework, NeurIPS'23.*
-* **[Torchattacks](https://github.com/Harry24k/adversarial-attacks-pytorch)**: *Adversarial Attack Library.*
-* **[RobustBench](https://github.com/RobustBench/robustbench)**: *Adversarially Trained Models & Benchmarks.*
+## 🔗 Related Projects
 
-## :memo: Citation
+- [**MAIR**](https://github.com/Harry24k/MAIR) — Adversarial Training Framework (NeurIPS'23)
+- [**Torchattacks**](https://github.com/Harry24k/adversarial-attacks-pytorch) — Adversarial Attack Library
+- [**RobustBench**](https://robustbench.github.io/) — Adversarially Trained Models & Benchmarks
 
-If you use this package in your research, please cite:
+---
 
-```bibtex
-@article{kim2025unlearning,
-  title={Unlearning-Aware Minimization},
-  author={Kim, Hoki and Kim, Keonwoo and Chae, Sungwon and Yoon, Sangwon},
-  booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems}
-  volume={39},
-  pages={--},
-  year={2025}
-}
-```
+## 📝 Citation
 
-## :memo: TODO List
-[] Extend this package to support LLM unlearning.
-[] Modify the logging/recording modules to ensure compatibility with TensorBoard.
-[] Upload models
-[] ...
+ ```bibtex
+  @article{kim2025unlearning,
+    title     = {Unlearning-Aware Minimization},
+    author    = {Kim, Hoki and Kim, Keonwoo and Chae, Sungwon and Yoon, Sangwon},
+    booktitle = {The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+    volume    = {39},
+    pages     = {--},
+    year      = {2025}
+  }
+  ```
 
-## :handshake: Contributing
+---
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+  ## ✅ TODO
+
+  - [ ] Extend support to LLM unlearning
+  - [ ] - [ ] TensorBoard compatibility for logging/recording modules
+  - [ ] - [ ] Upload pretrained model checkpoints
+  - [ ] - [ ] Add more datasets (ImageNet, CelebA)
+  - [ ]
+  - [ ] ---
+  - [ ]
+  - [ ] ## 🤝 Contributing
+  - [ ]
+  - [ ] Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and feel free to open a Pull Request.
+  - [ ]
+  - [ ] <div align="center">
+  <sub>Built with ❤️ by the <a href="https://trustworthyai.co.kr">TrustworthyAI Lab</a></sub>
+  </div></summary>
+</details>
