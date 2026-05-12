@@ -127,7 +127,7 @@ train_shuffle_and_transform=True
 | **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., 2023](https://arxiv.org/abs/2205.08096) |
 | **BoundaryShrink** | Nearest-class re-targeting to shrink forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2301.11557) |
 | **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., 2024](https://arxiv.org/abs/2304.04934) |
-| **ARU** | Adversarial Retain-free Unlearning | Yoon et al. |
+| **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
 
 ### Non-Training Methods
 
