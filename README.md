@@ -8,7 +8,6 @@
 <a href="https://pypi.org/project/torchunlearn/"><img alt="PyPI" src="https://img.shields.io/pypi/v/torchunlearn.svg?color=orange&style=flat-square" /></a>
 <img alt="Python" src="https://img.shields.io/badge/python-%3E%3D3.6-blue?style=flat-square" />
 <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-%3E%3D1.7.1-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" />
-<img alt="Benchmark" src="https://img.shields.io/badge/benchmark-CIFAR--10%20%7C%20ResNet--18-blueviolet?style=flat-square" />
 
 <br>
 
