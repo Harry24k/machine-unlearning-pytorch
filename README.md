@@ -195,56 +195,51 @@ Training methods run for **5 epochs** with SGD (lr=0.01, momentum=0.9, wd=5e-4).
 Results averaged over 3 seeds.
 
 **Metrics:**
-- Acc(R) = Retain accuracy (higher is better)
-- Acc(F) = Forget accuracy (lower is better)
-- Acc(Te) = Test accuracy
-- Gap = |Acc(F) - Acc(F)_retrain| (smaller is better).
+- RA = Retain accuracy (higher is better)
+- FA = Forget accuracy (lower is better)
+- TA = Test accuracy
+- time(s) = wall-clock unlearning time in seconds
+- $\Delta\mathcal{Acc}$ = $|\Delta\text{RA}| + |\Delta\text{FA}| + |\Delta\text{TA}|$ vs. Retrain oracle (lower is better)
 
 ### 🎲 Random Forgetting — 10% of training data
 
-| Method | Acc(R) | Acc(F) | Acc(Te) | Gap |
-|--------|:------:|:------:|:-------:|:---:|
-| *Retrain (oracle)* | *95.8%* | *10.3%* | *93.1%* | *0.0%* |
-| Original Model | 96.2% | 96.1% | 93.3% | 85.8% |
-| Finetune | 96.5% | 33.0% | 91.4% | 22.7% |
-| NegGrad | 94.1% | 18.7% | 91.8% | 8.4% |
-| RandomLabel | 95.3% | 22.4% | 91.6% | 12.1% |
-| L1Sparse | 95.7% | 28.6% | 91.9% | 18.3% |
-| **UAM** | 100% | 99.58% | 93.6% | — |
-| SCRUB | 99.84% | 97.84% | 93.24% | — |
-| BadTeacher | 99.78% | 99.78% | 93.18% | — |
-| BoundaryShrink | 89.14% | 82.16% | 81.71% | — |
-| SalUn | 99.79% | 99.62% | 93% | — |
-| ARU | 95.8% | 12.9% | 92.5% | 2.6% |
-| FisherForget | 93.2% | 42.5% | 90.4% | 32.2% |
-| Influence | 94.7% | 35.1% | 91.2% | 24.8% |
-| NegMerge | 99.46% | 99.24% | 93.01% | — |
-| Amnesiac | 99.98% | 99.94% | 94.48% | — |
+| Algorithm | RA | FA | TA | time(s) | **ΔAcc** |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Finetune | 100.00 | 99.84 | 94.26 | 32.2 | 94.90 |
+| NegGrad | 10.00 | 10.00 | 10.00 | 48.6 | 169.20 |
+| SCRUB | 31.69 | 32.02 | 31.86 | 35.1 | 147.07 |
+| BadTeacher | 99.70 | 99.74 | 93.11 | 42.7 | 93.35 |
+| BoundaryShrink | 87.71 | 82.34 | 80.77 | 46.1 | 92.46 |
+| SalUn | 99.64 | 99.72 | 92.95 | 63.6 | 93.41 |
+| FisherForget | 9.99 | 10.00 | 10.01 | 65.5 | 169.20 |
+| Influence | 99.98 | 99.94 | 94.48 | 49.2 | 95.20 |
+| Standard | 99.99 | 99.56 | 93.75 | 46.4 | 94.10 |
+| ARU | 90.35 | 90.12 | 84.75 | 42.9 | 93.62 |
+| L1Sparse | 100.00 | 99.92 | 94.28 | 43.8 | 95.00 |
+| RandomLabel | 49.71 | 51.24 | 46.82 | 44.1 | 133.31 |
+| Amnesiac | 99.98 | 99.94 | 94.48 | 25.9 | 95.20 |
+| NegMerge | 99.46 | 99.24 | 93.00 | 29.4 | 92.70 |
+| UAM | 100.00 | 85.72 | 85.32 | — | 87.40 |
 
-### 🏷️ Classwise Forgetting — Forget "Automobile"
+### 🏷️ Classwise Forgetting — Forget one class
 
-| Method | Acc(R) | Acc(F) | Acc(Te) | Gap |
-|--------|:------:|:------:|:-------:|:---:|
-| *Retrain (oracle)* | *97.3%* | *0.0%* | *93.0%* | *0.0%* |
-| Original Model | 97.5% | 97.2% | 93.3% | 97.2% |
-| Finetune | 97.1% | 12.4% | 92.5% | 12.4% |
-| NegGrad | 95.8% | 4.3% | 91.6% | 4.3% |
-| RandomLabel | 96.4% | 7.8% | 92.1% | 7.8% |
-| L1Sparse | 96.9% | 9.5% | 92.3% | 9.5% |
-| **UAM** | 99.84% | 0% | 93.24% | — |
-| SCRUB | 99.19% | 0% | 91.94% | — |
-| BadTeacher | 99.44% | 7.01% | 92.61% | — |
-| **BoundaryShrink** | 98.37% | 0% | 91.48% | — |
-| SalUn | 99.62% | 0% | 92.47% | — |
-| ARU | 96.9% | 1.9% | 92.6% | 1.9% |
-| FisherForget | 94.5% | 18.3% | 90.8% | 18.3% |
-| Influence | 95.7% | 11.6% | 91.5% | 11.6% |
-| NegMerge | 96.32% | 0.08% | 89.59% | — |
-| Amnesiac | 99.98% | 99.98% | 94.19% | — |
-
-**Bold** = best among approximate unlearning methods.
-
----
+| Algorithm | RA | FA | TA | time(s) | **ΔAcc** |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Finetune | 100.00 | 95.17 | 94.24 | 36.3 | 99.11 |
+| NegGrad | 11.11 | 0.00 | 11.11 | 40.5 | 168.08 |
+| SCRUB | 14.31 | 0.00 | 14.27 | 34.0 | 161.72 |
+| BadTeacher | 99.41 | 15.54 | 92.70 | 44.1 | 17.95 |
+| BoundaryShrink | 98.41 | 0.00 | 91.52 | 40.0 | 2.59 |
+| SalUn | 99.60 | 0.00 | 92.66 | 88.0 | 2.64 |
+| FisherForget | 97.34 | 1.24 | 90.62 | 67.4 | 3.66 |
+| Influence | 99.98 | 99.98 | 94.19 | 46.2 | 103.85 |
+| Standard | 99.99 | 81.13 | 93.87 | 47.2 | 84.69 |
+| ARU | 93.18 | 39.66 | 86.72 | 49.9 | 50.06 |
+| L1Sparse | 100.00 | 99.80 | 94.06 | 44.2 | 103.56 |
+| RandomLabel | 83.32 | 5.73 | 77.48 | 45.3 | 35.23 |
+| Amnesiac | 99.98 | 99.98 | 94.19 | 30.1 | 103.85 |
+| NegMerge | 96.31 | 0.08 | 89.58 | 29.0 | 4.49 |
+| UAM | 100.00 | 0.00 | 90.84 | — | 4.86 |
 
 ## 📈 Evaluation
 
