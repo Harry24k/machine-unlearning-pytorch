@@ -4,7 +4,7 @@
 
 **A PyTorch library for efficient machine unlearning — make your models forget, on demand.**
 
-<a href="https://github.com/ychxnn/unlearn/blob/master/LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/ychxnn/unlearn?color=brightgreen&style=flat-square" /></a>
+<a href="https://github.com/Harry24k/machine-unlearning-pytorch/blob/main/LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" /></a>
 <a href="https://pypi.org/project/torchunlearn/"><img alt="PyPI" src="https://img.shields.io/pypi/v/torchunlearn.svg?color=orange&style=flat-square" /></a>
 <img alt="Python" src="https://img.shields.io/badge/python-%3E%3D3.6-blue?style=flat-square" />
 <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-%3E%3D1.7.1-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" />
@@ -13,7 +13,8 @@
 
 📰 <a href="https://trustworthyai.co.kr/article/2025/uam-eng/">Blog Post</a> &nbsp;&middot;&nbsp;
 📄 <a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/116406">NeurIPS 2025 Paper</a> &nbsp;&middot;&nbsp;
-📓 <a href="demo.ipynb">Demo Notebook</a>
+<a href="demo.ipynb">Demo Notebook</a> &nbsp;&middot;&nbsp;
+  <a href="https://colab.research.google.com/github/Harry24k/machine-unlearning-pytorch/blob/main/demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;" /></a>
 
 </div>
 
@@ -298,10 +299,9 @@ Epoch | Cost   | Clean(R) | Clean(F) | Clean(Te)
 
   ## ✅ TODO
 
-  - [ ] Extend support to LLM unlearning
-  - [ ] - [ ] TensorBoard compatibility for logging/recording modules
-  - [ ] - [ ] Upload pretrained model checkpoints
-  - [ ] - [ ] Add more datasets (ImageNet, CelebA)
+  - [ ] TensorBoard compatibility for logging/recording modules
+  - [ ] Upload pretrained model checkpoints
+  - [ ] Add more datasets (ImageNet, CelebA)
   - [ ]
   - [ ] ---
   - [ ]
@@ -312,4 +312,3 @@ Epoch | Cost   | Clean(R) | Clean(F) | Clean(Te)
   - [ ] <div align="center">
   <sub>Built with ❤️ by the <a href="https://trustworthyai.co.kr">TrustworthyAI Lab</a></sub>
   </div></summary>
-</details>
