@@ -295,20 +295,5 @@ Epoch | Cost   | Clean(R) | Clean(F) | Clean(Te)
   }
   ```
 
----
-
-  ## ✅ TODO
-
-  - [ ] TensorBoard compatibility for logging/recording modules
-  - [ ] Upload pretrained model checkpoints
-  - [ ] Add more datasets (ImageNet, CelebA)
-  - [ ]
-  - [ ] ---
-  - [ ]
-  - [ ] ## 🤝 Contributing
-  - [ ]
-  - [ ] Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and feel free to open a Pull Request.
-  - [ ]
-  - [ ] <div align="center">
   <sub>Built with ❤️ by the <a href="https://trustworthyai.co.kr">TrustworthyAI Lab</a></sub>
   </div></summary>
