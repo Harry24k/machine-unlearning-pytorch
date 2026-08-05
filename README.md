@@ -148,7 +148,7 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 
 | Method | Description | Reference |
 |:---|:---|:---|
-| **Finetune** | Fine-tune on the retain set only | Baseline |
+| **Finetune** | Fine-tune on the retain set only | [Warnecke et al., NDSS 2023](https://arxiv.org/abs/2108.11577) |
 | **NegGrad** | Negative gradient on forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **L1Sparse** | L1 sparsity regularization during fine-tuning | [Jia et al., NeurIPS 2023](https://arxiv.org/abs/2304.04934) |
