@@ -158,6 +158,10 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 | **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., ICLR 2024](https://arxiv.org/abs/2310.12508) |
 | **UAM** | Unlearning-Aware Minimization | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/poster/116406) |
 | **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
+| **AMUN** | Fine-tune on the nearest adversarial example of each forget sample | [Ebrahimpour-Boroojeny et al., ICML 2025](https://icml.cc/virtual/2025/poster/46097) |
+| **SFRon** | Saliency forgetting in a remain-preserving manifold (fast/slow update) | [Huang et al., NeurIPS 2024](https://arxiv.org/abs/2409.19732) |
+| **RFE** | Two-phase augmented Lagrangian + W2-regularized gradient projection | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2603.26569) |
+| **MUMis** | Suppress input sensitivity on the forget set (needs no retain data) | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2402.15109) |
 
 ### Non-Training Methods
 
@@ -168,6 +172,10 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 | **NegMerge** | Sign-consensual weight merging | [Kim, Han & Choe, ICML 2025](https://arxiv.org/abs/2410.05583) |
 | **SISA** | Sharded, isolated, sliced, aggregated retraining | [Bourtoule et al., S&P 2021](https://arxiv.org/abs/1912.03817) |
 | **REM** | Redirection for erasing memory | — |
+
+> **MUMis is retain-free but still training-based.** It runs the normal
+> trainer loop; it simply never reads the Retain split, so you can pass the
+> Forget loader directly to `fit`.
 
 > **UAM is a minimizer, not a trainer.** It wraps any trainer through the
 > `minimizer=` argument of `Trainer.setup` — see the example below.
@@ -215,6 +223,57 @@ trainer.fit(train_loaders=merged_loader, n_epochs=5)
 from torchunlearn.unlearn import ARU
 
 trainer = ARU(rmodel, margin=1.0, eps=0.05, steps=50, omit_label=1)
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
+trainer.fit(train_loaders=merged_loader, n_epochs=5)
+```
+
+**AMUN**
+
+```python
+from torchunlearn.unlearn import AMUN
+
+trainer = AMUN(rmodel, attack="deepfool", steps=20)
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
+trainer.fit(train_loaders=merged_loader, n_epochs=5)
+```
+
+**SFRon**
+
+```python
+from torchunlearn.unlearn import SFRon
+
+trainer = SFRon(rmodel, saliency_ratio=0.5, slow_alpha=0.5, slow_every=5)
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
+trainer.fit(train_loaders=merged_loader, n_epochs=5)
+```
+
+**MUMis** (needs no retain data)
+
+```python
+from torchunlearn.unlearn import MUMis
+
+trainer = MUMis(rmodel, other_lambda=1.0, n_other=1)
+trainer.setup(optimizer="SGD(lr=1e-4)", n_epochs=1)
+trainer.fit(train_loaders=train_loaders["Forget"], n_epochs=1)
+```
+
+> The MUMis objective is unbounded below, so it needs a small learning rate
+> and early stopping. Watch `Clean(R)` and stop as soon as `Clean(F)` drops.
+
+**RFE** (retain-forget entanglement)
+
+```python
+from torchunlearn.unlearn import RFE
+
+# "Adjacent" holds the retain samples semantically entangled with the
+# forget set -- e.g. sibling subclasses under the same CIFAR-100 superclass.
+merged_loader = MergedLoaders({
+    "Retain":   train_loaders["Retain"],
+    "Forget":   train_loaders["Forget"],
+    "Adjacent": adjacent_loader,
+})
+
+trainer = RFE(rmodel, phase1_steps=100, constraint_tol=0.05, w2_lambda=1.0)
 trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
 trainer.fit(train_loaders=merged_loader, n_epochs=5)
 ```

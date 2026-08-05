@@ -18,13 +18,14 @@ class FisherForget:
             self.device = device
 
     def fit(self, train_loaders, alphas=[1e-9, 1e-8, 1e-7, 1e-6], repeat=1, omit_label=None, save_path=None, overwrite=False):
-        if os.path.exists(save_path):
-            if overwrite:
-                logging.warning("Save file(s) will be overwritten:" + save_path)
+        if save_path is not None:
+            if os.path.exists(save_path):
+                if overwrite:
+                    logging.warning("Save file(s) will be overwritten:" + save_path)
+                else:
+                    raise ValueError("[%s] is already exists." % (save_path))
             else:
-                raise ValueError("[%s] is already exists." % (save_path))
-        else:
-            os.makedirs(save_path)
+                os.makedirs(save_path)
                 
         hessian = self.get_hessian(train_loaders['Retain'])
         best_value = -1e10

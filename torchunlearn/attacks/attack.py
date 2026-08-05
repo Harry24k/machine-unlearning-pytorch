@@ -15,6 +15,19 @@ def wrapper_method(func):
     return wrapper_func
 
 
+def _torch_load(path, map_location=None):
+    """torch.load that works across the PyTorch 2.6 weights_only default flip.
+
+    Checkpoints written by this library pickle a RecordManager instance, so
+    they cannot be read under ``weights_only=True`` (the default from torch
+    2.6). Older torch has no such kwarg, hence the fallback.
+    """
+    try:
+        return torch.load(path, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=map_location)
+
+
 class Attack(object):
     r"""
     Base class for all attacks.
@@ -405,7 +418,7 @@ class Attack(object):
         load_predictions=False,
         load_clean_inputs=False,
     ):
-        save_dict = torch.load(load_path)
+        save_dict = _torch_load(load_path)
         keys = ["adv_inputs", "labels"]
 
         if load_predictions:

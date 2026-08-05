@@ -18,6 +18,19 @@ Base class for all trainers.
 """
 
 
+def _torch_load(path, map_location=None):
+    """torch.load that works across the PyTorch 2.6 weights_only default flip.
+
+    Checkpoints written by this library pickle a RecordManager instance, so
+    they cannot be read under ``weights_only=True`` (the default from torch
+    2.6). Older torch has no such kwarg, hence the fallback.
+    """
+    try:
+        return torch.load(path, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=map_location)
+
+
 class Trainer:
     def __init__(self, rmodel, device=None):
         assert isinstance(rmodel, RobModel)
@@ -70,7 +83,7 @@ class Trainer:
         n_iters=None,
         record_type="Epoch",
         save_path=None,
-        save_type="Epoch",
+        save_type=None,
         save_best=None,
         save_overwrite=False,
         refit=False,
@@ -377,7 +390,7 @@ class Trainer:
             torch.save(self.dict_save, save_path + save_name)
 
     def load_dict(self, save_path):
-        save_dict = torch.load(save_path)
+        save_dict = _torch_load(save_path)
         default_keys = [
             "accumulated_epoch",
             "accumulated_iter",

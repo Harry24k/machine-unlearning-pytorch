@@ -10,6 +10,19 @@ from ..utils import get_accuracy
 from .modules.normalize import Normalize
 
 
+def _torch_load(path, map_location=None):
+    """torch.load that works across the PyTorch 2.6 weights_only default flip.
+
+    Checkpoints written by this library pickle a RecordManager instance, so
+    they cannot be read under ``weights_only=True`` (the default from torch
+    2.6). Older torch has no such kwarg, hence the fallback.
+    """
+    try:
+        return torch.load(path, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=map_location)
+
+
 class RobModel(nn.Module):
     r"""
     Wrapper class for PyTorch models.
@@ -62,7 +75,7 @@ class RobModel(nn.Module):
 
     # Load from state dict
     def load_dict(self, save_path):
-        state_dict = torch.load(save_path, map_location="cpu")
+        state_dict = _torch_load(save_path, map_location="cpu")
         self.load_state_dict_auto(state_dict["rmodel"])
         print("Model loaded.")
 
@@ -121,7 +134,7 @@ class RobModel(nn.Module):
     def save_logits(self, loaders, save_path, overwrite=False):
         if not overwrite and os.path.exists(save_path):
             print(f"File {save_path} already exists. Loading existing logits.")
-            return torch.load(save_path)
+            return _torch_load(save_path)
         
         self.eval()
         device = self.get_device()

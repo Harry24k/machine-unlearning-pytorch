@@ -32,20 +32,33 @@ class RandomLabel(Unlearner):
         ce_none = nn.CrossEntropyLoss(reduction="none")
         fg_loss = ce_none(logits[:n_forget], y[:n_forget])
 
-        rt_loss = torch.zeros_like(fg_loss)
+        rt_loss = fg_loss.new_zeros(0)
         if self.retain_lambda > 0:
             rt_loss = ce_none(logits[n_forget:], y[n_forget:])
             self.add_record_item("RTLoss", rt_loss.mean().item())
 
         l1_loss = l1_parameter_penalty(self.rmodel)
-        cost = ((1 - self.retain_lambda) * fg_loss
-                + self.retain_lambda * rt_loss
-                + self.l1_penalty_lambda * l1_loss)
+
+        # Retain and forget batches need not be the same length -- MergedLoaders
+        # cycles the shorter loader, so the tail batches differ. Reduce each
+        # term separately instead of adding them element-wise.
+        weighted_fg = (1 - self.retain_lambda) * fg_loss
+        weighted_rt = self.retain_lambda * rt_loss
 
         self.add_record_item("FGLoss", fg_loss.mean().item())
         self.add_record_item("L1Loss", l1_loss.item())
+
+        if reduction == "mean":
+            cost = weighted_fg.mean() + self.l1_penalty_lambda * l1_loss
+            if rt_loss.numel() > 0:
+                cost = cost + weighted_rt.mean()
+            self.add_record_item("Cost", cost.item())
+            return cost
+
+        # Per-sample: concatenate so cost[:n_forget] stays the forget block.
+        cost = torch.cat([weighted_fg, weighted_rt]) + self.l1_penalty_lambda * l1_loss
         self.add_record_item("Cost", cost.mean().item())
-        return cost.mean() if reduction == "mean" else cost
+        return cost
 
     def _build_batch(self, train_data):
         """Apply random labels to the forget batch and concatenate with retain (if any)."""

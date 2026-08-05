@@ -13,6 +13,14 @@ BadTeacher     -- competent/bad-teacher distillation (Chundawat et al., AAAI 202
 BoundaryShrink -- nearest-class re-targeting (Chen et al., CVPR 2023)
 SalUn          -- saliency-masked random-label (Fan et al., ICLR 2024)
 ARU            -- adversarial retain-free unlearning (Yoon et al., 2026)
+AMUN           -- fine-tune on nearest adversarial examples
+                  (Ebrahimpour-Boroojeny et al., ICML 2025)
+SFRon          -- saliency forgetting in a remain-preserving manifold
+                  (Huang et al., NeurIPS 2024 Spotlight)
+MUMis          -- retain-free input-sensitivity suppression
+                  (Cheng et al., ICLR 2026)
+RFE            -- two-phase unlearning under retain-forget entanglement
+                  (Cheng et al., ICLR 2026)
 
 Non-training methods (closed-form / weight-edit / architectural)
 ----------------------------------------------------------------
@@ -41,6 +49,10 @@ from .trainers.badteacher import BadTeacher
 from .trainers.boundaryshrink import BoundaryShrink
 from .trainers.salun import SalUn
 from .trainers.aru import ARU
+from .trainers.amun import AMUN
+from .trainers.sfron import SFRon
+from .trainers.mumis import MUMis
+from .trainers.rfe import RFE
 
 # --- Non-training ---
 from .nontrainers.fisherforget import FisherForget
@@ -74,6 +86,7 @@ __all__ = [
     # training-based
     "Finetune", "NegGrad", "RandomLabel", "L1Sparse", "Standard",
     "SCRUB", "BadTeacher", "BoundaryShrink", "SalUn", "ARU",
+    "AMUN", "SFRon", "MUMis", "RFE",
     # non-training
     "FisherForget", "Influence", "NegMerge",
     "SISATrainingProtocol", "SISAUnlearner", "SISAAggregator",

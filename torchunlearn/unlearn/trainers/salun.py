@@ -40,6 +40,9 @@ class SalUn(Unlearner):
             saliency mask (top-k by gradient magnitude). Default 0.5.
         retain_lambda (float): weight on the retain CE loss (default 1.0).
         forget_lambda (float): weight on the random-label CE loss (default 1.0).
+        enforce_frozen (bool): restore non-salient weights after each
+            optimizer step. Needed because SGD applies weight decay inside
+            ``step()``, after gradient masking. Default True.
     """
 
     def __init__(
@@ -48,11 +51,13 @@ class SalUn(Unlearner):
         saliency_threshold: float = 0.5,
         retain_lambda: float = 1.0,
         forget_lambda: float = 1.0,
+        enforce_frozen: bool = True,
     ):
         super().__init__(rmodel)
         self.saliency_threshold = saliency_threshold
         self.retain_lambda = retain_lambda
         self.forget_lambda = forget_lambda
+        self.enforce_frozen = enforce_frozen
         self._saliency_mask: Optional[dict] = None
 
     # ------------------------------------------------------------------ API
@@ -130,12 +135,51 @@ class SalUn(Unlearner):
         self.add_record_item("Cost", cost.item())
         return cost
 
+    def _update_weight(self, *inputs):
+        """Overridden so the saliency mask is actually applied.
+
+        The engine's default ``_update_weight`` goes straight from
+        ``backward()`` to ``optimizer.step()``, which would leave the mask
+        computed but unused -- reducing SalUn to plain random-label
+        fine-tuning. We insert the mask between the two.
+        """
+        if self.minimizer is not None:
+            self.minimizer.step(self.calculate_cost, *inputs)
+            return
+
+        cost = self.calculate_cost(*inputs)
+        self.optimizer.zero_grad()
+        cost.backward()
+        self.apply_saliency_mask_to_grads()
+        if self.clip_grad_norm:
+            torch.nn.utils.clip_grad_norm_(
+                self.rmodel.parameters(), self.clip_grad_norm
+            )
+
+        # Zeroing .grad is not sufficient on its own: SGD adds
+        # weight_decay * p to the gradient INSIDE step(), so non-salient
+        # weights would still decay every iteration -- exactly the drift the
+        # mask exists to prevent. Snapshot and restore them.
+        if self.enforce_frozen and self._saliency_mask is not None:
+            frozen = {
+                n: p.detach().clone()
+                for n, p in self.rmodel.named_parameters()
+                if n in self._saliency_mask
+            }
+            self.optimizer.step()
+            with torch.no_grad():
+                for n, p in self.rmodel.named_parameters():
+                    if n in frozen:
+                        keep = self._saliency_mask[n].to(p.device)
+                        p.copy_(keep * p + (1 - keep) * frozen[n])
+        else:
+            self.optimizer.step()
+
     def apply_saliency_mask_to_grads(self) -> None:
         """Zero out gradients of non-salient parameters.
 
-        Call this immediately after loss.backward() and before optimizer.step().
-        In the standard torchunlearn engine this should be called by overriding
-        the update step or by registering it as a backward hook.
+        Called by :meth:`_update_weight` between ``backward()`` and
+        ``optimizer.step()``.
         """
         if self._saliency_mask is None:
             return
