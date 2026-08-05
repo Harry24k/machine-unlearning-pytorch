@@ -152,9 +152,9 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 | **NegGrad** | Negative gradient on forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **L1Sparse** | L1 sparsity regularization during fine-tuning | [Jia et al., NeurIPS 2023](https://arxiv.org/abs/2304.04934) |
-| **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., NeurIPS 2023](https://arxiv.org/abs/2302.09621) |
+| **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., NeurIPS 2023](https://arxiv.org/abs/2302.09880) |
 | **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., AAAI 2023](https://arxiv.org/abs/2205.08096) |
-| **BoundaryShrink** | Nearest-class re-targeting to shrink the forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2301.11557) |
+| **BoundaryShrink** | Nearest-class re-targeting to shrink the forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2301.11570) |
 | **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., ICLR 2024](https://arxiv.org/abs/2310.12508) |
 | **UAM** | Unlearning-Aware Minimization | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/poster/116406) |
 | **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
