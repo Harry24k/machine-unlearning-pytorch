@@ -501,4 +501,4 @@ class EmptyDataset(torch.utils.data.Dataset):
         return len(self.x_data)
 
     def __getitem__(self, idx):
-        return _, _
+        raise IndexError("EmptyDataset contains no samples.")
