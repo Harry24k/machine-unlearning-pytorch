@@ -24,7 +24,8 @@ class NegMerge:
         self.rmodel = rmodel
         if device is None:
             self.device = next(rmodel.parameters()).device
-        ALREADY_FIXED
+        else:
+            self.device = device
 
     def fit(
         self,
