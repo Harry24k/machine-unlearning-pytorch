@@ -149,8 +149,8 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 | Method | Description | Reference |
 |:---|:---|:---|
 | **Finetune** | Fine-tune on the retain set only | Baseline |
-| **NegGrad** | Negative gradient on forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/2004.09932) |
-| **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/2004.09932) |
+| **NegGrad** | Negative gradient on forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
+| **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **L1Sparse** | L1 sparsity regularization during fine-tuning | [Jia et al., NeurIPS 2023](https://arxiv.org/abs/2304.04934) |
 | **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., NeurIPS 2023](https://arxiv.org/abs/2302.09621) |
 | **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., AAAI 2023](https://arxiv.org/abs/2205.08096) |
@@ -163,8 +163,8 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 
 | Method | Description | Reference |
 |:---|:---|:---|
-| **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/2004.09932) |
-| **Influence** | Newton-step influence function removal | [Izzo et al., AISTATS 2021](https://arxiv.org/abs/2012.09822) |
+| **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
+| **Influence** | Newton-step influence function removal | [Izzo et al., AISTATS 2021](https://arxiv.org/abs/2002.10077) |
 | **NegMerge** | Sign-consensual weight merging | [Kim, Han & Choe, ICML 2025](https://arxiv.org/abs/2410.05583) |
 | **SISA** | Sharded, isolated, sliced, aggregated retraining | [Bourtoule et al., S&P 2021](https://arxiv.org/abs/1912.03817) |
 | **REM** | Redirection for erasing memory | — |
