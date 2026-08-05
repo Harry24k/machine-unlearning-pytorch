@@ -1,3 +1,12 @@
+import itertools
+
+import numpy as np
+import torch
+import torchvision.transforms as transforms
+
+from .datasets import Datasets
+
+
 def get_subloader(given_loader, n_limit):
     if n_limit is None:
         return given_loader
@@ -15,10 +24,6 @@ def get_subloader(given_loader, n_limit):
             break
     return sub_loader
 
-import torch
-import numpy as np
-import torchvision.transforms as transforms
-from torchunlearn.utils.datasets import Datasets
 
 def sample_indices(labels, ratio, stratified=True, seed=None):
     np.random.seed(seed)
@@ -194,9 +199,6 @@ class UnlearnDataSetup:
         }
         
         return train_loaders, test_loaders
-
-from torch.utils.data import DataLoader
-import itertools
 
 class MergedLoaders:
     def __init__(self, loaders: dict):
