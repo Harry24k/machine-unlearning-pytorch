@@ -162,6 +162,7 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 | **SFRon** | Saliency forgetting in a remain-preserving manifold (fast/slow update) | [Huang et al., NeurIPS 2024](https://arxiv.org/abs/2409.19732) |
 | **RFE** | Two-phase augmented Lagrangian + W2-regularized gradient projection | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2603.26569) |
 | **MUMis** | Suppress input sensitivity on the forget set (needs no retain data) | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2402.15109) |
+| **FaLW** | Forgetting-aware instance-wise loss reweighting for long-tailed forget sets | [Yu et al., 2026](https://arxiv.org/abs/2601.18650) |
 
 ### Non-Training Methods
 
@@ -246,6 +247,22 @@ trainer = SFRon(rmodel, saliency_ratio=0.5, slow_alpha=0.5, slow_every=5)
 trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
 trainer.fit(train_loaders=merged_loader, n_epochs=5)
 ```
+
+**FaLW** (needs a held-out validation loader)
+
+```python
+from torchunlearn.unlearn import FaLW
+
+trainer = FaLW(rmodel, tau=0.15)
+trainer.prepare(train_loaders["Forget"], val_loader)  # balance factor + target-distribution source
+trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epochs=5)
+trainer.fit(train_loaders=merged_loader, n_epochs=5)
+```
+
+> FaLW estimates a per-class Gaussian over the model's true-class probability
+> on *unseen* (validation) data at every step, which is faithful to the paper's
+> Algorithm 1 but costs one validation pass per optimization step. Set
+> `estimate_every > 1` to amortize this at some fidelity cost.
 
 **MUMis** (needs no retain data)
 

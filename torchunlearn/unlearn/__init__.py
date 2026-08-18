@@ -21,6 +21,8 @@ MUMis          -- retain-free input-sensitivity suppression
                   (Cheng et al., ICLR 2026)
 RFE            -- two-phase unlearning under retain-forget entanglement
                   (Cheng et al., ICLR 2026)
+FaLW           -- forgetting-aware loss reweighting for long-tailed forget
+                  sets (Yu et al., 2026)
 
 Non-training methods (closed-form / weight-edit / architectural)
 ----------------------------------------------------------------
@@ -53,6 +55,7 @@ from .trainers.amun import AMUN
 from .trainers.sfron import SFRon
 from .trainers.mumis import MUMis
 from .trainers.rfe import RFE
+from .trainers.falw import FaLW
 
 # --- Non-training ---
 from .nontrainers.fisherforget import FisherForget
@@ -86,7 +89,7 @@ __all__ = [
     # training-based
     "Finetune", "NegGrad", "RandomLabel", "L1Sparse", "Standard",
     "SCRUB", "BadTeacher", "BoundaryShrink", "SalUn", "ARU",
-    "AMUN", "SFRon", "MUMis", "RFE",
+    "AMUN", "SFRon", "MUMis", "RFE", "FaLW",
     # non-training
     "FisherForget", "Influence", "NegMerge",
     "SISATrainingProtocol", "SISAUnlearner", "SISAAggregator",
