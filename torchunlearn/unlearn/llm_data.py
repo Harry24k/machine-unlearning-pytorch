@@ -36,7 +36,7 @@ from torch.utils.data import Dataset
 ROLES = ("T", "S", "C", "G")
 
 
-# ----------------------------------------------------------------------------- records
+#  records
 @dataclass
 class SpanItem:
     doc_id: str
@@ -59,7 +59,7 @@ class SpanItem:
         return (self.doc_id, self.fact_id)
 
 
-# ----------------------------------------------------------------------------- loading
+#  loading
 def load_docs(path: str, limit_ids: Optional[set] = None) -> Dict[str, str]:
     """document_id/doc_id -> text/doc_text. If limit_ids is given only those docs are kept (memory)."""
     docs = {}
@@ -103,7 +103,7 @@ def canonical_of(fact: dict) -> str:
     return str(cv).lower().strip()
 
 
-# ----------------------------------------------------------------------------- scope
+#  scope
 def select_forget_facts(facts: List[dict], scope: str, targets: Sequence) -> List[dict]:
     """targets: fact_ids (scope=fact) | (subject_id, relation) pairs (scope=subject_relation) | subject_ids (scope=subject)."""
     if scope == "fact":
@@ -449,8 +449,6 @@ class TSCGEvaluator:
 
     @torch.no_grad()
     def _extract(self, model, items):
-        """배치 greedy 생성. item 별 예산 = gold 토큰 수 + gen_slack (score_probes_v3 와 동일 규약).
-        반환: [(extracted, gen_text, rougeL_recall, rougeL_f1)]"""
         model.eval()
         dev = self.device or next(model.parameters()).device
         encs = [self._encode(it) for it in items]
@@ -499,7 +497,6 @@ class TSCGEvaluator:
             d = {"n": len(items), "lp_mean": sum(x["lp_mean"] for x in lps) / len(lps),
                  "lp_sum": sum(x["lp_sum"] for x in lps) / len(lps)}
             if ex is not None:
-                # extract_rate = 채점기의 match_strict (게이트와 동일 정의). contains 는 보조.
                 d["extract_rate"] = sum(int(h["strict"]) for h in ex) / len(ex)
                 d["lenient_rate"] = sum(int(h["lenient"]) for h in ex) / len(ex)
                 d["contains_rate"] = sum(int(h["contains"]) for h in ex) / len(ex)
