@@ -234,7 +234,6 @@ def cmd_unlearn(a):
     dump(a.out, res)
     print(json.dumps(res["delta"], indent=1))
 
-
 def cmd_eval(a):
     model = load_model(a, trainable="none")
     roles = {}
@@ -246,7 +245,6 @@ def cmd_eval(a):
     r = ev.evaluate(model, quick=a.no_gen)
     print(ev.table(r, f"[eval] {a.model}"))
     dump(a.out, {"command": "eval", "model": a.model, "roles": {k: len(v) for k, v in roles.items()}, "results": r})
-
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
