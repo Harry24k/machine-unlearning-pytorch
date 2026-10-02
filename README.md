@@ -4,129 +4,44 @@
 
 **A PyTorch library for machine unlearning across vision classifiers, large language models, and multimodal (vision-language) models — make your models forget, on demand.**
 
-<p>
 <a href="https://github.com/Harry24k/machine-unlearning-pytorch/blob/main/LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" /></a>
 <a href="https://pypi.org/project/torchunlearn/"><img alt="PyPI" src="https://img.shields.io/pypi/v/torchunlearn.svg?color=orange&style=flat-square" /></a>
 <img alt="Python" src="https://img.shields.io/badge/python-%3E%3D3.8-blue?style=flat-square" />
 <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-%3E%3D1.7.1-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" />
 <img alt="Domains" src="https://img.shields.io/badge/domains-vision%20%7C%20LLM%20%7C%20multimodal-blueviolet?style=flat-square" />
+<a href="https://colab.research.google.com/github/Harry24k/machine-unlearning-pytorch/blob/main/demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" /></a>
+
+[Blog Post](https://trustworthyai.co.kr/article/2025/uam-eng/) · [NeurIPS 2025 Paper](https://neurips.cc/virtual/2025/poster/116406) · [Demo Notebook](demo.ipynb) · [LLM / Multimodal Guide](docs/multimodal_unlearning.md) · [VLM Paper Table](docs/multimodal_papers.md)
+
+</div>
 
 <br>
 
-📰 <a href="https://trustworthyai.co.kr/article/2025/uam-eng/">Blog Post</a> &nbsp;&middot;&nbsp;
-📄 <a href="https://neurips.cc/virtual/2025/poster/116406">NeurIPS 2025 Paper</a> &nbsp;&middot;&nbsp;
-<a href="demo.ipynb">Demo Notebook</a> &nbsp;&middot;&nbsp;
-<a href="https://colab.research.google.com/github/Harry24k/machine-unlearning-pytorch/blob/main/demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;" /></a>
-&nbsp;&middot;&nbsp; 📚 <a href="docs/multimodal_unlearning.md">LLM / multimodal guide</a> &nbsp;&middot;&nbsp;
-🗂 <a href="docs/multimodal_papers.md">VLM paper table</a>
+Machine unlearning removes the influence of specific training data from a trained model, as if that data was never used.
 
-Machine unlearning removes the influence of specific training data from a trained model, as if that data was never used:
-
-| | |
+| Use case | What gets removed |
 |:--|:--|
-| 🔒 **Privacy** | GDPR "right to be forgotten", PII removal from LLMs and VLMs |
-| 🛠 **Data correction** | remove mislabeled or corrupted samples |
-| ⚖️ **Bias mitigation** | eliminate biased training data |
-| 🛡 **Security & safety** | purge backdoors / poisoned examples, remove unsafe behaviour from VLMs |
+| 🔒 **Privacy** | GDPR "right to be forgotten", PII in LLMs and VLMs |
+| 🛠 **Data correction** | Mislabeled or corrupted samples |
+| ⚖️ **Bias mitigation** | Biased training data |
+| 🛡 **Security & safety** | Backdoors, poisoned examples, unsafe VLM behaviour |
+
+## Contents
+
+**Start** — [Installation](#installation) · [Domains at a glance](#domains-at-a-glance) · [Project layout](#project-layout)<br>
+**Vision** — [Quick start](#quick-start) · [Forgetting scenarios](#forgetting-scenarios) · [Methods](#vision-methods) · [Evaluation](#evaluation) · [Benchmark results](#benchmark-results)<br>
+**LLM** — [QA-level forgetting](#qa--instruction-level-forgetting) · [Span-level (PII) forgetting](#span-level-pii-forgetting)<br>
+**Multimodal** — [Vision-language models](#vision-language-models-lvlm) · [Methods from the literature](#methods-from-the-multimodal-literature) · [CLIP](#clip--dual-encoders)<br>
+**More** — [Registry and CLI](#registry-and-cli) · [Tests](#tests) · [Related projects](#related-projects) · [Citation](#citation) · [Contributing](#contributing) · [License](#license)
 
 <br>
 
-## 🧭 Choose your domain
+## Installation
 
-- 🔒 **Privacy compliance** — GDPR "right to be forgotten"
-- 🛠 **Data correction** — remove mislabeled or corrupted samples
-- ⚖️ **Bias mitigation** — eliminate biased training data
-- 🛡 **Security** — purge backdoor or poisoned examples, remove unsafe behaviour from VLMs
-
-Every domain uses the same workflow — wrap the model, build forget / retain loaders, pick a method, `setup()`, `fit()`, evaluate:
-
-| domain | what you unlearn from | model wrapper | methods | evaluation |
-|:--|:--|:--|:--|:--|
-| 🖼 **Vision** | image classifiers (ResNet, ViT, ...) | `RobModel` | 16 training-based + 5 non-training (Finetune, NegGrad, SalUn, SCRUB, UAM, ARU, AMUN, SFRon, RFE, MUMis, FaLW, FisherForget, NegMerge, SISA, REM, ...) | retain / forget / test accuracy, MIA, ZRF, adversarial robustness, `BenchmarkSuite` |
-| 📝 **LLM** | any HF causal LM (base or fine-tuned), QA-level or span-level (PII) forgetting | `SeqRobModel` / `LLMRobModel` | GradAscent, GradDiff, NPO, SimNPO, DPO, AltPO, RMU, WGA, SatImp, CEU, UNDIAL, PDU, JensUn, FLAT, PO, KL-Min, REVS | answer log-prob, ROUGE-L / EM, truth ratio + KS test, Min-k% MIA, scope-aware T/S/C/G probes |
-| 🖼📝 **Multimodal** | vision-language models (LLaVA, Qwen-VL, Idefics, Gemma-3, ...) and CLIP-style dual encoders | `SeqRobModel` (LVLM), `CLIPRobModel` (CLIP) | every LLM method on image+text inputs, plus SIU, ASRU, Safety Mirage, LUMoE, SLUG, ADU | FIUBench, MLLMU-Bench, UMU-Bench, CLEAR, MLUBench, MMUBench, VLGuard evaluators, text-only leakage probe |
-
-The LLM and multimodal domains share one code path: a method only sees the answer-token `labels` and forwards
-whatever else the processor produced (`pixel_values`, `image_grid_thw`, ...), so a method written once runs on a
-text LLM and on an image+text model alike.
-
-**Unlearn from** image classifiers (ResNet, ViT, …)
-
-**Wrapper** `RobModel`
-
-**Methods** Finetune · NegGrad · RandomLabel · L1Sparse · SCRUB · BadTeacher · BoundaryShrink · SalUn · UAM · ARU · AMUN · SFRon · RFE · MUMis · FaLW · FisherForget · Influence · NegMerge · SISA · REM · Amnesiac
-
-**Evaluate** retain / forget / test accuracy, MIA, ZRF, adversarial robustness, `BenchmarkSuite`
-
-[→ Vision section](#-vision)
-
-</td>
-<td>
-
-**Unlearn from** any HF causal LM — base or fine-tuned, QA-level or span-level (PII)
-
-**Wrapper** `SeqRobModel` · `LLMRobModel`
-
-**Methods** GradAscent · GradDiff · NPO · SimNPO · DPO · AltPO · RMU · WGA · SatImp · CEU · UNDIAL · PDU · JensUn · FLAT · PO · KL-Min · REVS
-
-**Evaluate** answer log-prob, ROUGE-L / EM, truth ratio + KS test, Min-k% MIA, scope-aware T/S/C/G probes
-
-[→ LLM section](#-llm)
-
-</td>
-<td>
-
-**Unlearn from** vision-language models (LLaVA, Qwen-VL, Idefics, Gemma-3, …) and CLIP-style dual encoders
-
-**Wrapper** `SeqRobModel` (LVLM) · `CLIPRobModel` (CLIP)
-
-**Methods** every LLM method on image+text, plus SIU · ASRU · Safety Mirage · LUMoE · SLUG · ADU
-
-**Evaluate** FIUBench, MLLMU-Bench, UMU-Bench, CLEAR, MLUBench, MMUBench, VLGuard evaluators, text-only leakage probe
-
-[→ Multimodal section](#-multimodal)
-
-</td>
-</tr>
-</table>
-
-> 💡 The LLM and multimodal domains share **one code path**: a method only sees the answer-token `labels` and forwards
-> whatever else the processor produced (`pixel_values`, `image_grid_thw`, …). A method written once runs on a text
-> LLM and on an image+text model alike.
-
-<br>
-
-## 📋 Table of Contents
-
-<table>
-<tr valign="top">
-<td>
-
-**Getting started**
-- [Installation](#-installation)
-- [Project layout](#-project-layout)
-- [Vision](#-vision)
-  - [Quick Start](#quick-start)
-  - [Forgetting Scenarios](#forgetting-scenarios)
-  - [Supported Methods](#supported-methods)
-  - [Evaluation](#evaluation)
-  - [Benchmark Results](#benchmark-results)
-- [LLM](#-llm)
-- [Multimodal](#-multimodal)
-- [Registry and CLI](#-registry-and-cli)
-- [Tests](#-tests)
-- [Related Projects](#-related-projects)
-- [Citation](#-citation)
-- [Contributing](#-contributing)
-- [License](#-license)
-
-</td>
-</tr>
-</table>
-
-<br>
-
-**Requirements:** Python >= 3.8, PyTorch >= 1.7.1 (vision); Python >= 3.9, PyTorch >= 2.0 and `transformers` 4.5x for the LLM / multimodal tracks.
+| Track | Requirements |
+|:--|:--|
+| Vision | Python ≥ 3.8, PyTorch ≥ 1.7.1 |
+| LLM / Multimodal | Python ≥ 3.9, PyTorch ≥ 2.0, `transformers` 4.5x (Qwen3.5 / Qwen3-VL need 5.x) |
 
 ```bash
 pip install torchunlearn            # vision only
@@ -139,39 +54,56 @@ Latest development version:
 pip install "git+https://github.com/Harry24k/machine-unlearning-pytorch.git#egg=torchunlearn[llm]"
 ```
 
-Models and datasets are **not** distributed with the library: point the wrappers at any local checkpoint or
-Hugging Face id you have access to.  Qwen3.5 / Qwen3-VL need `transformers` 5.x.
+> [!NOTE]
+> Models and datasets are **not** distributed with the library. Point the wrappers at any local checkpoint or Hugging Face id you have access to.
 
----
+<br>
 
-## 🗂 Project layout
+## Domains at a glance
 
-```
-torchunlearn/
-├── nn/            RobModel (vision)  ·  SeqRobModel (LLM + LVLM)  ·  CLIPRobModel (dual encoder)
-├── unlearn/
-│   ├── trainers/      vision trainers (finetune, neggrad, salun, scrub, aru, amun, sfron, rfe, mumis, falw, ...)  ·  llm_pii.py (LLM-*)
-│   │   └── seq/       sequence trainers shared by LLM and LVLM (MM-*): base, 12 token-level methods,
-│   │                  po, klmin, siu, grpo + asru, lumoe, safetymirage, finetune
-│   ├── nontrainers/   fisherforget, influence, negmerge, sisa, rem, amnesiac, revs (LLM), slug (CLIP)
-│   ├── clip/          ADU (domain unlearning for CLIP)
-│   ├── recipes/       benchmark loaders: fiubench, mllmu_bench (+UMU), clear, mlubench, mmubench, domains, vlguard
-│   ├── seq_data.py    SeqSample, SeqCollator (answer-only labels), splits, loaders
-│   └── llm_data.py    span-level PII data (SpanDataset, build_spec, TSCGEvaluator)
-├── metrics/       UnlearningEvaluator (vision) · SeqUnlearningEvaluator · mm_bench (benchmark evaluators) · judge (LLM-as-judge) · text
-├── benchmarks/    BenchmarkSuite (vision)
-├── api/           registry: register_unlearner / describe / build_unlearner(_split), HParam specs (modality = vision | seq | clip)
-├── attacks/ optim/ utils/   adversarial attacks, UAM minimizer, datasets and vision models
-scripts/           run_mm.py (LLM + LVLM: finetune | unlearn | eval)  ·  run_clip.py (slug | adu)  ·  run_pii_unlearn.py (span-level)
-docs/              multimodal_unlearning.md (guide)  ·  multimodal_papers.md (paper table)  ·  llm_pii_unlearning.md
-tests/             CPU smoke tests on tiny random-init models (LLaVA, Llama, CLIP)
-```
+Every domain follows the same workflow:
 
----
+**Wrap the model → Build Forget / Retain loaders → Pick a method → `setup()` → `fit()` → Evaluate**
 
-## 🖼 Vision
+| | 🖼 Vision | 📝 LLM | 🖼📝 Multimodal |
+|:--|:--|:--|:--|
+| **Unlearn from** | Image classifiers (ResNet, ViT, …) | Any HF causal LM — base or fine-tuned | VLMs (LLaVA, Qwen-VL, Idefics, Gemma-3, …) and CLIP-style dual encoders |
+| **Granularity** | Random subset · Whole class | QA pair · Text span (PII) | Image + text QA pair |
+| **Wrapper** | `RobModel` | `SeqRobModel` · `LLMRobModel` | `SeqRobModel` (LVLM) · `CLIPRobModel` (CLIP) |
+| **Evaluate** | Retain / forget / test acc, MIA, ZRF, adversarial robustness | Answer log-prob, ROUGE-L / EM, truth ratio + KS, Min-k% MIA, T/S/C/G probes | FIUBench, MLLMU-Bench, UMU-Bench, CLEAR, MLUBench, MMUBench, VLGuard, text-only leakage probe |
+| **Go to** | [Vision →](#vision) | [LLM →](#llm) | [Multimodal →](#multimodal) |
 
-### Quick Start
+> [!TIP]
+> LLM and multimodal share **one code path**: a method only sees the answer-token `labels` and forwards whatever else the processor produced (`pixel_values`, `image_grid_thw`, …). A method written once runs on a text LLM and on an image+text model alike.
+
+<br>
+
+## Project layout
+
+| Path | What's inside |
+|:--|:--|
+| 📦 **`torchunlearn/nn/`** | `RobModel` (vision) · `SeqRobModel` (LLM + LVLM) · `CLIPRobModel` (dual encoder) |
+| 📦 **`torchunlearn/unlearn/`** | All unlearning methods and data utilities ↓ |
+| &emsp;└ `trainers/` | Vision trainers (Finetune, NegGrad, SalUn, SCRUB, ARU, AMUN, SFRon, RFE, MUMis, FaLW, …) · `llm_pii.py` (`LLM-*`) |
+| &emsp;&emsp;└ `seq/` | Sequence trainers shared by LLM and LVLM (`MM-*`): 12 token-level methods, PO, KLMin, SIU, GRPO + ASRU, LUMoE, SafetyMirage, Finetune |
+| &emsp;└ `nontrainers/` | FisherForget, Influence, NegMerge, SISA, REM, Amnesiac, REVS (LLM), SLUG (CLIP) |
+| &emsp;└ `clip/` | ADU — domain unlearning for CLIP |
+| &emsp;└ `recipes/` | Benchmark loaders: FIUBench, MLLMU-Bench (+UMU), CLEAR, MLUBench, MMUBench, domains, VLGuard |
+| &emsp;└ `seq_data.py` | `SeqSample`, `SeqCollator` (answer-only labels), splits, loaders |
+| &emsp;└ `llm_data.py` | Span-level PII data (`SpanDataset`, `build_spec`, `TSCGEvaluator`) |
+| 📦 **`torchunlearn/metrics/`** | `UnlearningEvaluator` (vision) · `SeqUnlearningEvaluator` · `mm_bench` · `judge` (LLM-as-judge) · `text` |
+| 📦 **`torchunlearn/benchmarks/`** | `BenchmarkSuite` (vision) |
+| 📦 **`torchunlearn/api/`** | Registry: `register_unlearner` / `describe` / `build_unlearner(_split)`, HParam specs |
+| 📦 **`torchunlearn/attacks/` `optim/` `utils/`** | Adversarial attacks, UAM minimizer, datasets and vision models |
+| ▶️ **`scripts/`** | `run_mm.py` (LLM + LVLM) · `run_clip.py` (SLUG, ADU) · `run_pii_unlearn.py` (span-level) |
+| 📄 **`docs/`** | `multimodal_unlearning.md` · `multimodal_papers.md` · `llm_pii_unlearning.md` |
+| ✅ **`tests/`** | CPU smoke tests on tiny random-init models (LLaVA, Llama, CLIP) |
+
+<br>
+
+## Vision
+
+### Quick start
 
 ```python
 import torchunlearn
@@ -200,10 +132,10 @@ trainer.setup(optimizer="SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)", n_epoch
 trainer.fit(train_loaders=merged_loader, n_epochs=5, save_path="./models/unlearned")
 ```
 
-> **Demo notebook.** [`demo.ipynb`](demo.ipynb) expects a pretrained checkpoint at
-> `./models/CIFAR10_Standard/last.pth` (not distributed) and a GPU runtime.
+> [!NOTE]
+> [`demo.ipynb`](demo.ipynb) expects a pretrained checkpoint at `./models/CIFAR10_Standard/last.pth` (not distributed) and a GPU runtime.
 
-### Forgetting Scenarios
+### Forgetting scenarios
 
 **Random forgetting** — forget a randomly sampled subset of training data (e.g., 10%):
 
@@ -226,74 +158,94 @@ train_loaders, test_loaders = setup.get_loaders_for_classwise(
 )
 ```
 
-### Supported Methods
+### Vision methods
 
-**Training-based methods**
+#### Training-based
 
-| Method | Description | Reference |
-|:---|:---|:---|
+| Method | Idea | Paper |
+|:--|:--|:--|
 | **Finetune** | Fine-tune on the retain set only | [Warnecke et al., NDSS 2023](https://arxiv.org/abs/2108.11577) |
-| **NegGrad** | Negative gradient on forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
-| **RandomLabel** | Relabel forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
+| **NegGrad** | Negative gradient on the forget set | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
+| **RandomLabel** | Relabel the forget set with random labels | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
 | **L1Sparse** | L1 sparsity regularization during fine-tuning | [Jia et al., NeurIPS 2023](https://arxiv.org/abs/2304.04934) |
 | **SCRUB** | Alternating KL-max / KL-min distillation | [Kurmanji et al., NeurIPS 2023](https://arxiv.org/abs/2302.09880) |
-| **BadTeacher** | Competent / bad-teacher knowledge distillation | [Chundawat et al., AAAI 2023](https://arxiv.org/abs/2205.08096) |
+| **BadTeacher** | Competent / bad-teacher distillation | [Chundawat et al., AAAI 2023](https://arxiv.org/abs/2205.08096) |
 | **BoundaryShrink** | Nearest-class re-targeting to shrink the forget-class boundary | [Chen et al., CVPR 2023](https://arxiv.org/abs/2303.11570) |
 | **SalUn** | Saliency-masked random-label fine-tuning | [Fan et al., ICLR 2024](https://arxiv.org/abs/2310.12508) |
-| **UAM** | Unlearning-Aware Minimization | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/poster/116406) |
-| **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
+| **SFRon** | Saliency forgetting in a remain-preserving manifold | [Huang et al., NeurIPS 2024](https://arxiv.org/abs/2409.19732) |
 | **AMUN** | Fine-tune on the nearest adversarial example of each forget sample | [Ebrahimpour-Boroojeny et al., ICML 2025](https://icml.cc/virtual/2025/poster/46097) |
-| **SFRon** | Saliency forgetting in a remain-preserving manifold (fast/slow update) | [Huang et al., NeurIPS 2024](https://arxiv.org/abs/2409.19732) |
+| **UAM** ⭐ | Unlearning-Aware Minimization *(a minimizer — wraps any trainer)* | [Kim et al., NeurIPS 2025](https://neurips.cc/virtual/2025/poster/116406) |
+| **ARU** | Adversarial Retain-free Unlearning | [Yoon et al., 2026](https://ieeexplore.ieee.org/document/11414433) |
 | **RFE** | Two-phase augmented Lagrangian + W2-regularized gradient projection | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2603.26569) |
-| **MUMis** | Suppress input sensitivity on the forget set (needs no retain data) | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2402.15109) |
-| **FaLW** | Forgetting-aware instance-wise loss reweighting for long-tailed forget sets | [Yu et al., 2026](https://arxiv.org/abs/2601.18650) |
+| **MUMis** | Suppress input sensitivity on the forget set *(retain-free)* | [Cheng et al., ICLR 2026](https://arxiv.org/abs/2402.15109) |
+| **FaLW** | Instance-wise loss reweighting for long-tailed forget sets | [Yu et al., 2026](https://arxiv.org/abs/2601.18650) |
 
-**Non-training methods**
+#### Non-training
 
-| Method | Description | Reference |
-|:---|:---|:---|
-| **FisherForget** | Fisher information matrix weight perturbation | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
-| **Influence** | Newton-step influence function removal | [Izzo et al., AISTATS 2021](https://arxiv.org/abs/2002.10077) |
-| **NegMerge** | Sign-consensual weight merging | [Kim, Han & Choe, ICML 2025](https://arxiv.org/abs/2410.05583) |
+| Method | Idea | Paper |
+|:--|:--|:--|
+| **FisherForget** | Fisher-information weight perturbation | [Golatkar et al., CVPR 2020](https://arxiv.org/abs/1911.04933) |
+| **Influence** | Newton-step influence-function removal | [Izzo et al., AISTATS 2021](https://arxiv.org/abs/2002.10077) |
 | **SISA** | Sharded, isolated, sliced, aggregated retraining | [Bourtoule et al., S&P 2021](https://arxiv.org/abs/1912.03817) |
-| **REM** | Redirection for erasing memory | — |
 | **Amnesiac** | Revert the updates of specific training batches | [Graves et al., AAAI 2021](https://arxiv.org/abs/2010.10981) |
+| **NegMerge** | Sign-consensual weight merging | [Kim, Han & Choe, ICML 2025](https://arxiv.org/abs/2410.05583) |
+| **REM** | Redirection for erasing memory | — |
 
-> **MUMis is retain-free but still training-based** — it never reads the Retain split, so pass the Forget loader directly to `fit`.
-> **UAM is a minimizer, not a trainer** — it wraps any trainer through `Trainer.setup(minimizer=...)`.
+> [!IMPORTANT]
+> **UAM** is a minimizer, not a trainer — plug it in through `Trainer.setup(minimizer=...)`.<br>
+> **MUMis** never reads the Retain split — pass the Forget loader directly to `fit`.
 
 <details>
-<summary><b>Usage examples (NegGrad · UAM · ARU · AMUN · SFRon · FaLW · MUMis · RFE · FisherForget · NegMerge)</b></summary>
+<summary><b>Usage examples for each method</b></summary>
+
+<br>
+
+**NegGrad**
 
 ```python
-from torchunlearn.unlearn import NegGrad, Standard, ARU, AMUN, SFRon, FaLW, MUMis, RFE, FisherForget, NegMerge
 opt = "SGD(lr=0.01, momentum=0.9, weight_decay=5e-4)"
-
-# NegGrad
 NegGrad(rmodel, retain_lambda=0.5).setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
+```
 
-# UAM (via the Standard trainer)
+**UAM** (via the `Standard` trainer)
+
+```python
 Standard(rmodel).setup(optimizer=opt, minimizer=f"UAM(rho={rho}, cosine_total_step={cosine_total_step}, gamma={gamma})",
                        n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
+```
 
-# ARU / AMUN / SFRon
+**ARU · AMUN · SFRon**
+
+```python
 ARU(rmodel, margin=1.0, eps=0.05, steps=50, omit_label=1).setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
 AMUN(rmodel, attack="deepfool", steps=20).setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
 SFRon(rmodel, saliency_ratio=0.5, slow_alpha=0.5, slow_every=5).setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
+```
 
-# FaLW (needs a held-out validation loader; set estimate_every > 1 to amortize the per-step validation pass)
+**FaLW** — needs a held-out validation loader; set `estimate_every > 1` to amortize the per-step validation pass
+
+```python
 trainer = FaLW(rmodel, tau=0.15)
 trainer.prepare(train_loaders["Forget"], val_loader)
 trainer.setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
+```
 
-# MUMis (retain-free; unbounded objective -> small lr + early stopping, watch Clean(R))
+**MUMis** — retain-free; unbounded objective, so use a small lr + early stopping and watch `Clean(R)`
+
+```python
 MUMis(rmodel, other_lambda=1.0, n_other=1).setup(optimizer="SGD(lr=1e-4)", n_epochs=1).fit(train_loaders=train_loaders["Forget"], n_epochs=1)
+```
 
-# RFE ("Adjacent" = retain samples entangled with the forget set, e.g. sibling CIFAR-100 subclasses)
+**RFE** — `"Adjacent"` = retain samples entangled with the forget set (e.g. sibling CIFAR-100 subclasses)
+
+```python
 merged_loader = MergedLoaders({"Retain": train_loaders["Retain"], "Forget": train_loaders["Forget"], "Adjacent": adjacent_loader})
 RFE(rmodel, phase1_steps=100, constraint_tol=0.05, w2_lambda=1.0).setup(optimizer=opt, n_epochs=5).fit(train_loaders=merged_loader, n_epochs=5)
+```
 
-# Non-training
+**FisherForget · NegMerge** (non-training)
+
+```python
 FisherForget(rmodel).fit(train_loaders, alphas=[1e-9, 1e-8, 1e-7, 1e-6], repeat=3, save_path="./models/fisher")
 NegMerge(rmodel).fit(train_loaders, lrs=[1e-4, 5e-4, 1e-3], epochs=1, repeats=3, scaling=1.0, consensus_ratio=1.0,
                      aggregation="mean", save_path="./models/negmerge")
@@ -303,9 +255,7 @@ NegMerge(rmodel).fit(train_loaders, lrs=[1e-4, 5e-4, 1e-3], epochs=1, repeats=3,
 
 ### Evaluation
 
-<table>
-<tr><th>During unlearning</th><th>After unlearning</th></tr>
-<tr valign="top"><td>
+**During unlearning** — register the loaders you want tracked, then train as usual:
 
 ```python
 trainer.record_rob({
@@ -320,33 +270,8 @@ trainer.fit(train_loaders=merged_loader, n_epochs=5,
             record_type="Epoch")
 ```
 
-</td><td>
-
-```python
-from torchunlearn.unlearn import NegMerge
-
-unlearner = NegMerge(rmodel)
-unlearner.fit(train_loaders, lrs=[1e-4, 5e-4, 1e-3], epochs=1, repeats=3,
-              scaling=1.0, consensus_ratio=1.0, aggregation="mean",
-              save_path="./models/negmerge")
-```
-
-</details>
-
-### Evaluation
-
-**During unlearning** — register the loaders you want tracked, then train as usual:
-
-suite = BenchmarkSuite(train_loaders, test_loaders, retrained_model=retrained_rmodel)
-suite.add("Finetune", ft_model); suite.add("NegGrad", ng_model)
-suite.print_table()
-```
-
-</td></tr>
-</table>
-
 <details>
-<summary><b>Sample training log</b> (Finetune, CIFAR-10, 10% random forgetting)</summary>
+<summary>Sample training log (Finetune, CIFAR-10, 10% random forgetting)</summary>
 
 ```text
 [Finetune]
@@ -365,6 +290,8 @@ Epoch   Cost     Clean(R)   Clean(F)   Clean(Te)   lr       s/it
 5       0.1073   97.3633    33.0078    91.4062     0.0100   0.0522
 ---------------------------------------------------------------------
 ```
+
+</details>
 
 **After unlearning**
 
@@ -392,21 +319,21 @@ suite.add("NegGrad", ng_model)
 suite.print_table()
 ```
 
-### Benchmark Results
+### Benchmark results
 
-Evaluated on **CIFAR-10 / ResNet-18**.
-Training methods run for **5 epochs** with SGD (lr=0.01, momentum=0.9, wd=5e-4).
-Results averaged over 3 seeds.
+CIFAR-10 · ResNet-18 · 5 epochs · SGD (lr 0.01, momentum 0.9, wd 5e-4) · averaged over 3 seeds
 
-### Benchmark Results
-
-CIFAR-10 / ResNet-18 · 5 epochs · SGD (lr 0.01, momentum 0.9, wd 5e-4) · 3 seeds.
-**RA** retain acc (↑) · **FA** forget acc (should match Retrain) · **TA** test acc (↑) · **ΔAcc** = |ΔRA| + |ΔFA| + |ΔTA| vs Retrain (↓)
+| Metric | Meaning | Goal |
+|:--|:--|:--|
+| **RA** | Retain accuracy | ↑ |
+| **FA** | Forget accuracy | Match Retrain |
+| **TA** | Test accuracy | ↑ |
+| **ΔAcc** | \|ΔRA\| + \|ΔFA\| + \|ΔTA\| vs. Retrain | ↓ |
 
 <details>
-<summary><b>🎲 Random Forgetting — 10% of training data</b></summary>
+<summary><b>🎲 Random forgetting — 10% of training data</b></summary>
 
-| Algorithm | RA | FA | TA | time(s) | **ΔAcc** |
+| Algorithm | RA | FA | TA | Time (s) | **ΔAcc** |
 |:---|---:|---:|---:|---:|---:|
 | *Retrain (oracle)* | *TODO* | *TODO* | *TODO* | *TODO* | *0.00* |
 | Finetune | 100.00 | 99.84 | 94.26 | 32.2 | 94.90 |
@@ -427,9 +354,9 @@ CIFAR-10 / ResNet-18 · 5 epochs · SGD (lr 0.01, momentum 0.9, wd 5e-4) · 3 se
 </details>
 
 <details>
-<summary><b>🏷️ Classwise Forgetting — Forget one class</b></summary>
+<summary><b>🏷️ Classwise forgetting — one class</b></summary>
 
-| Algorithm | RA | FA | TA | time(s) | **ΔAcc** |
+| Algorithm | RA | FA | TA | Time (s) | **ΔAcc** |
 |:---|---:|---:|---:|---:|---:|
 | *Retrain (oracle)* | *TODO* | *TODO* | *TODO* | *TODO* | *0.00* |
 | Finetune | 100.00 | 95.17 | 94.24 | 36.3 | 99.11 |
@@ -449,18 +376,23 @@ CIFAR-10 / ResNet-18 · 5 epochs · SGD (lr 0.01, momentum 0.9, wd 5e-4) · 3 se
 
 </details>
 
----
+<br>
 
-## 📝 LLM
+## LLM
 
-Two granularities, both on **any Hugging Face causal LM you load yourself** (base model, your fine-tuned checkpoint,
-or a PEFT adapter directory).
+Works on **any Hugging Face causal LM you load yourself** — a base model, your fine-tuned checkpoint, or a PEFT adapter directory.
 
-### QA / instruction-level forgetting (`SeqRobModel`, `MM-*` methods)
+| | QA / instruction-level | Span-level (PII) |
+|:--|:--|:--|
+| **Forget unit** | A (prompt, answer) pair | A text span inside a document (a name, an address, …) |
+| **Loss on** | Answer tokens only | Span tokens only |
+| **Wrapper** | `SeqRobModel` | `LLMRobModel` |
+| **Methods** | `MM-*` | `LLM-*` |
+| **Evaluation** | Log-prob, NLL, Min-k% MIA, ROUGE-L / EM, truth ratio + KS | Scope-aware Target / Same-subject / Co-document / Global (T/S/C/G) probes |
 
-The forget unit is a (prompt, answer) pair; the loss is applied to the answer tokens only (the chat template is
-rendered twice and the answer span is what remains after the longest common token prefix, so no tokenizer-specific
-boundary bugs).  Build the model to unlearn from with `SeqFinetune`, then unlearn.
+### QA / instruction-level forgetting
+
+The answer span is found by rendering the chat template twice and keeping what remains after the longest common token prefix — no tokenizer-specific boundary bugs. Build the model to unlearn from with `SeqFinetune` (stage I), then unlearn (stage II).
 
 ```python
 from torchunlearn import SeqRobModel, SeqUnlearningEvaluator
@@ -471,42 +403,49 @@ model = SeqRobModel.from_pretrained("meta-llama/Llama-3.1-8B-Instruct", device="
 data = from_jsonl("qa.jsonl", fields={"prompt": "question", "answer": "answer", "group": "subject"})   # text-only: no images
 col = SeqCollator(model, alt_text="I don't know.")                 # alt_* = refusal / alternate for DPO, PO, FLAT
 
-SeqFinetune(model).setup(optimizer="AdamW(lr=2e-5)").fit(make_loader(data, col, batch_size=8), n_epochs=3)   # stage I
+# Stage I — fine-tune
+SeqFinetune(model).setup(optimizer="AdamW(lr=2e-5)").fit(make_loader(data, col, batch_size=8), n_epochs=3)
 
+# Stage II — unlearn
 forget, retain = split_forget_retain(data, by="group", ratio=0.1, seed=0)
 ev = SeqUnlearningEvaluator({"Forget": forget, "Retain": retain}, col)
 NPO(model, beta=0.1, alpha=1.0).set_evaluator(ev).setup(optimizer="AdamW(lr=1e-5)", n_epochs=5) \
-   .fit(build_unlearn_loaders(forget, retain, col, batch_size=4), n_epochs=5)                                 # stage II
+   .fit(build_unlearn_loaders(forget, retain, col, batch_size=4), n_epochs=5)
 model.save_pretrained("runs/npo/model")
 ```
 
-Methods: `MM-GradAscent`, `MM-GradDiff`, `MM-NPO`, `MM-SimNPO`, `MM-DPO` (IDK-DPO), `MM-AltPO`, `MM-RMU`, `MM-WGA`,
-`MM-SatImp`, `MM-UNDIAL`, `MM-PDU`, `MM-FLAT`, `MM-PO`, `MM-KLMin`, `MM-Finetune` (the `MM-` prefix means
-"sequence model", text-only or image+text).  Evaluation: log-prob / token, sequence NLL, Min-k% MIA, ROUGE-L / EM /
-includes on greedy generations (`SeqUnlearningEvaluator`); TOFU-style truth ratio and KS forget quality, multiple-choice
-accuracy and LLM-judge rubrics (`torchunlearn.metrics.mm_bench`, `metrics.judge`).
+The `MM-` prefix means "sequence model" — text-only or image+text.
 
-### Span-level (PII) forgetting (`LLMRobModel`, `LLM-*` methods)
+| Methods | `MM-GradAscent` · `MM-GradDiff` · `MM-NPO` · `MM-SimNPO` · `MM-DPO` (IDK-DPO) · `MM-AltPO` · `MM-RMU` · `MM-WGA` · `MM-SatImp` · `MM-UNDIAL` · `MM-PDU` · `MM-FLAT` · `MM-PO` · `MM-KLMin` · `MM-Finetune` |
+|:--|:--|
 
-The forget unit is a text span inside a document (a name, an address, ...); labels cover the span tokens only and
-the evaluation is **scope-aware**: Target / Same-subject / Co-document / Global probes (T/S/C/G).  14 methods
-(`LLM-GradAscent` ... `LLM-FLAT`, `LLM-CEU`, `LLM-JensUn`, non-gradient `LLM-REVS`) share the same loss formulas as
-the `MM-*` family.  See [docs/llm_pii_unlearning.md](docs/llm_pii_unlearning.md) and `scripts/run_pii_unlearn.py`.
+| Evaluation | Where |
+|:--|:--|
+| Log-prob / token, sequence NLL, Min-k% MIA, ROUGE-L / EM / includes on greedy generations | `SeqUnlearningEvaluator` |
+| TOFU-style truth ratio and KS forget quality, multiple-choice accuracy | `torchunlearn.metrics.mm_bench` |
+| LLM-judge rubrics | `torchunlearn.metrics.judge` |
+
+### Span-level (PII) forgetting
+
+14 methods (`LLM-GradAscent` … `LLM-FLAT`, `LLM-CEU`, `LLM-JensUn`, and non-gradient `LLM-REVS`) share the same loss formulas as the `MM-*` family. Full walkthrough: [docs/llm_pii_unlearning.md](docs/llm_pii_unlearning.md) and `scripts/run_pii_unlearn.py`.
 
 ```python
 from torchunlearn.unlearn.llm_data import load_docs, load_facts, build_spec, SpanDataset, make_collate, TSCGEvaluator
 from torchunlearn.unlearn.trainers.llm_pii import LLMRobModel, LLM_TRAINERS
 ```
 
----
+<br>
 
-## 🖼📝 Multimodal
+## Multimodal
 
-### Vision-language models (LVLM): the same sequence trainers, now with images
+### Vision-language models (LVLM)
 
-`SeqRobModel.from_pretrained` detects the modality from the config and loads `AutoModelForImageTextToText`
-(LLaVA-1.5 / NeXT / OneVision, Qwen2-VL / Qwen2.5-VL, Idefics2/3, SmolVLM, InternVL, Gemma-3, PaliGemma, Pixtral,
-Phi-4-MM, ...).  `trainable` selects what moves: `lm`, `vision`, `projector`, `lm+projector`, `lora:...`, or a regex.
+Same sequence trainers as the LLM track, now with images. `SeqRobModel.from_pretrained` detects the modality from the config and loads `AutoModelForImageTextToText`.
+
+| | |
+|:--|:--|
+| **Supported families** | LLaVA-1.5 / NeXT / OneVision · Qwen2-VL / Qwen2.5-VL · Idefics2/3 · SmolVLM · InternVL · Gemma-3 · PaliGemma · Pixtral · Phi-4-MM · … |
+| **`trainable=`** | `lm` · `vision` · `projector` · `lm+projector` · `lora:...` · a regex |
 
 ```python
 from torchunlearn import SeqRobModel, SeqUnlearningEvaluator
@@ -523,22 +462,40 @@ GradDiff(model, grad_ckpt=True).set_evaluator(ev).setup(optimizer="AdamW(lr=1e-5
         .fit(build_unlearn_loaders(forget, retain, col, batch_size=2), n_epochs=5)
 ```
 
-### Methods from the multimodal unlearning literature (ICLR / ICML / NeurIPS 2024–2026)
+### Methods from the multimodal literature
 
-| venue | paper | registry / class |
-|---|---|---|
-| NeurIPS 2024 | **SIU** – Single Image Unlearning (multifaceted FT data + dual-masked KL) | `MM-SIU`, `recipes.mmubench.build_siu_samples` |
-| ICLR 2025 | **FIUBench** – fictitious facial identities; baselines GA / GD / KL / PO | `recipes.fiubench`, `mm_bench.FIUBenchEvaluator`, `MM-KLMin`, `MM-PO` |
-| ICML 2025 | **SLUG** – single-layer single-gradient unlearning for CLIP, transplantable into LLaVA | `CLIP-SLUG` (`nontrainers/slug.py`, `apply_to_vlm`) |
-| NeurIPS 2025 | **ADU** – approximate domain unlearning for CLIP (deep vision prompts, InstaPG, domain-disentangling loss) | `unlearn.clip.ADU`, `recipes.domains` |
-| NeurIPS 2025 | **UMU-Bench** – unimodal vs multimodal knowledge, 653 profiles | `recipes.mllmu_bench`, `mm_bench.MLLMUBenchEvaluator` |
-| ICLR 2026 | **Safety Mirage** – VLM safety by NPO / RMU unlearning on VLGuard | `MM-SafetyMirage-NPO`, `MM-SafetyMirage-RMU`, `build_vlguard_sets`, `SafetyMirageEvaluator` |
-| ICML 2026 | **ASRU** – closed-form activation steering of one down-projection + GRPO with a rule-based refusal reward | `MM-ASRUSteer`, `MM-ASRU` (`trainers/seq/grpo.py`) |
-| ICML 2026 | **MLUBench / LUMoE** – lifelong unlearning with switchable LoRA experts and an entity router | `trainers.seq.LUMoE`, `recipes.mlubench`, `MLUBenchEvaluator` |
+| Method | Venue | Idea | Use via |
+|:--|:--|:--|:--|
+| **SIU** | NeurIPS 2024 | Single Image Unlearning — multifaceted FT data + dual-masked KL | `MM-SIU` |
+| **FIUBench** | ICLR 2025 | Fictitious facial identities; GA / GD / KL / PO baselines | `recipes.fiubench` |
+| **SLUG** | ICML 2025 | Single-layer single-gradient unlearning for CLIP, transplantable into LLaVA | `CLIP-SLUG` |
+| **ADU** | NeurIPS 2025 | Approximate domain unlearning for CLIP | `unlearn.clip.ADU` |
+| **UMU-Bench** | NeurIPS 2025 | Unimodal vs. multimodal knowledge, 653 profiles | `recipes.mllmu_bench` |
+| **Safety Mirage** | ICLR 2026 | VLM safety via NPO / RMU unlearning on VLGuard | `MM-SafetyMirage-NPO` · `-RMU` |
+| **ASRU** | ICML 2026 | Closed-form activation steering + GRPO with a rule-based refusal reward | `MM-ASRUSteer` · `MM-ASRU` |
+| **LUMoE** | ICML 2026 | Lifelong unlearning with switchable LoRA experts and an entity router (MLUBench) | `trainers.seq.LUMoE` |
 
-Benchmarks with ready recipes and evaluators: **FIUBench**, **MLLMU-Bench**, **UMU-Bench**, **CLEAR**, **MLUBench**,
-**MMUBench**, **VLGuard**.  The paper table with fidelity notes and the methods that were deliberately not
-implemented is in [docs/multimodal_papers.md](docs/multimodal_papers.md).
+<details>
+<summary>Full entry points (recipes, evaluators, source files)</summary>
+
+<br>
+
+| Method | Entry points |
+|:--|:--|
+| SIU | `MM-SIU`, `recipes.mmubench.build_siu_samples` |
+| FIUBench | `recipes.fiubench`, `mm_bench.FIUBenchEvaluator`, `MM-KLMin`, `MM-PO` |
+| SLUG | `CLIP-SLUG` (`nontrainers/slug.py`, `apply_to_vlm`) |
+| ADU | `unlearn.clip.ADU`, `recipes.domains` (deep vision prompts, InstaPG, domain-disentangling loss) |
+| UMU-Bench | `recipes.mllmu_bench`, `mm_bench.MLLMUBenchEvaluator` |
+| Safety Mirage | `MM-SafetyMirage-NPO`, `MM-SafetyMirage-RMU`, `build_vlguard_sets`, `SafetyMirageEvaluator` |
+| ASRU | `MM-ASRUSteer`, `MM-ASRU` (`trainers/seq/grpo.py`) |
+| MLUBench / LUMoE | `trainers.seq.LUMoE`, `recipes.mlubench`, `MLUBenchEvaluator` |
+
+</details>
+
+**Benchmarks with ready recipes and evaluators:** FIUBench · MLLMU-Bench · UMU-Bench · CLEAR · MLUBench · MMUBench · VLGuard
+
+Fidelity notes and the methods deliberately left out are in [docs/multimodal_papers.md](docs/multimodal_papers.md).
 
 ### CLIP / dual encoders
 
@@ -553,51 +510,9 @@ slug.fit(eval_fn=lambda model: (forget_acc(model), test_acc(model)))          # 
 slug.apply_to_vlm(SeqRobModel.from_pretrained("llava-hf/llava-1.5-7b-hf"))   # same vision tower -> LLaVA forgets too
 ```
 
----
-
-## 🧾 Registry and CLI
-
-Every method is registered with its hyper-parameter spec and modality (`vision` | `seq` | `clip`):
-
-```python
-from torchunlearn.api import list_algorithms, describe, build_unlearner_split
-list_algorithms(modality="seq")          # ['MM-Finetune', 'MM-GradAscent', ..., 'MM-ASRU', ..., 'LLM-NPO', ...]
-describe("MM-NPO")                       # setup kwargs (optimizer, n_epochs, ...) and hparams with defaults
-u, setup_kw = build_unlearner_split("MM-NPO", rmodel, hparams={"beta": 0.1, "trainable": "lm"})
-```
-
-Command line (LLM and LVLM share the same commands; text-only models simply have no images):
-
-```bash
-python scripts/run_mm.py finetune --model Qwen/Qwen2-VL-7B-Instruct --data llava:train.json --image-root imgs --trainable lm --epochs 3 --out runs/ft
-python scripts/run_mm.py unlearn  --model runs/ft/model --data llava:train.json --image-root imgs --split group:0.1 \
-                                  --method MM-NPO --hp beta=0.1 --trainable lm --grad-ckpt --epochs 5 --lr 1e-5 --out runs/npo --save-model
-python scripts/run_mm.py eval     --model runs/npo/model --data Forget=jsonl:forget.jsonl Retain=jsonl:retain.jsonl --out runs/eval
-python scripts/run_clip.py slug   --model openai/clip-vit-large-patch14-336 --forget f.jsonl --retain r.jsonl --eval-forget ef.jsonl --eval-test et.jsonl --classes classes.txt --out runs/slug
-python scripts/run_clip.py adu    --model openai/clip-vit-base-patch16 --root /data/office_home --forget-domains Clipart --out runs/adu
-```
-
-Data specs: `jsonl:<path>` (+ `--fields prompt=question,answer=answer,images=image,group=subject`), `llava:<path.json>`,
-`hf:<name>[:<split>]`.  Shared GPUs: pass `--mem-fraction`.
-
----
-
-## ✅ Tests
-
-```bash
-python -m pytest tests -q
-```
-
-The suites run on CPU with tiny random-init models (LLaVA, Llama, CLIP built from configs; only the
-`sshleifer/tiny-gpt2` tokenizer is downloaded): answer-mask invariants, every registered sequence method moving only
-its declared parameters, fine-tune → unlearn → save → reload round-trips, LoRA adapters, the paper methods (SIU, ASRU,
-LUMoE, SLUG, ADU), benchmark recipe parsers and every evaluator's metric keys.
-
----
-
 <br>
 
-## 🧾 Registry and CLI
+## Registry and CLI
 
 Every method is registered with its hyper-parameter spec and modality (`vision` · `seq` · `clip`):
 
@@ -609,54 +524,70 @@ describe("MM-NPO")                   # setup kwargs (optimizer, n_epochs, ...) a
 u, setup_kw = build_unlearner_split("MM-NPO", rmodel, hparams={"beta": 0.1, "trainable": "lm"})
 ```
 
-LLM and LVLM share the same commands — text-only models simply have no images:
+**LLM / LVLM** — same commands; text-only models simply have no images:
 
 ```bash
-# LLM / LVLM
-python scripts/run_mm.py finetune --model Qwen/Qwen2-VL-7B-Instruct --data llava:train.json --image-root imgs --trainable lm --epochs 3 --out runs/ft
-python scripts/run_mm.py unlearn  --model runs/ft/model --data llava:train.json --image-root imgs --split group:0.1 \
-                                  --method MM-NPO --hp beta=0.1 --trainable lm --grad-ckpt --epochs 5 --lr 1e-5 --out runs/npo --save-model
-python scripts/run_mm.py eval     --model runs/npo/model --data Forget=jsonl:forget.jsonl Retain=jsonl:retain.jsonl --out runs/eval
+python scripts/run_mm.py finetune --model Qwen/Qwen2-VL-7B-Instruct --data llava:train.json --image-root imgs \
+    --trainable lm --epochs 3 --out runs/ft
 
-# CLIP
-python scripts/run_clip.py slug --model openai/clip-vit-large-patch14-336 --forget f.jsonl --retain r.jsonl \
-                                --eval-forget ef.jsonl --eval-test et.jsonl --classes classes.txt --out runs/slug
-python scripts/run_clip.py adu  --model openai/clip-vit-base-patch16 --root /data/office_home --forget-domains Clipart --out runs/adu
+python scripts/run_mm.py unlearn --model runs/ft/model --data llava:train.json --image-root imgs --split group:0.1 \
+    --method MM-NPO --hp beta=0.1 --trainable lm --grad-ckpt --epochs 5 --lr 1e-5 --out runs/npo --save-model
+
+python scripts/run_mm.py eval --model runs/npo/model \
+    --data Forget=jsonl:forget.jsonl Retain=jsonl:retain.jsonl --out runs/eval
 ```
 
-| data spec | meaning |
+**CLIP**
+
+```bash
+python scripts/run_clip.py slug --model openai/clip-vit-large-patch14-336 --forget f.jsonl --retain r.jsonl \
+    --eval-forget ef.jsonl --eval-test et.jsonl --classes classes.txt --out runs/slug
+
+python scripts/run_clip.py adu --model openai/clip-vit-base-patch16 --root /data/office_home \
+    --forget-domains Clipart --out runs/adu
+```
+
+| Data spec | Meaning |
 |:--|:--|
-| `jsonl:<path>` | records; map fields with `--fields prompt=question,answer=answer,images=image,group=subject` |
+| `jsonl:<path>` | Records; map fields with `--fields prompt=question,answer=answer,images=image,group=subject` |
 | `llava:<path.json>` | LLaVA "conversations" JSON (VLGuard / MLLMU exports) |
 | `hf:<name>[:<split>]` | Hugging Face datasets |
 
-> On shared GPUs always pass `--mem-fraction`.
+> [!TIP]
+> On shared GPUs, always pass `--mem-fraction`.
 
 <br>
 
-## ✅ Tests
+## Tests
 
 ```bash
 python -m pytest tests -q
 ```
 
-CPU-only, on tiny random-init models (LLaVA, Llama, CLIP built from configs; only the `sshleifer/tiny-gpt2`
-tokenizer is downloaded): answer-mask invariants, every registered sequence method moving only its declared
-parameters, fine-tune → unlearn → save → reload round-trips, LoRA adapters, the paper methods (SIU, ASRU, LUMoE,
-SLUG, ADU), benchmark recipe parsers and every evaluator's metric keys.
+CPU-only, on tiny random-init models (LLaVA, Llama, CLIP built from configs; only the `sshleifer/tiny-gpt2` tokenizer is downloaded). Covers:
+
+| Area | Checks |
+|:--|:--|
+| Data | Answer-mask invariants |
+| Methods | Every registered sequence method moves only its declared parameters |
+| Lifecycle | Fine-tune → unlearn → save → reload round-trips, LoRA adapters |
+| Paper methods | SIU, ASRU, LUMoE, SLUG, ADU |
+| Benchmarks | Recipe parsers and every evaluator's metric keys |
 
 <br>
 
-## 🔗 Related Projects
+## Related projects
 
-- [**MAIR**](https://github.com/Harry24k/MAIR) — Adversarial Training Framework (NeurIPS'23)
-- [**Torchattacks**](https://github.com/Harry24k/adversarial-attacks-pytorch) — Adversarial Attack Library
-- [**RobustBench**](https://robustbench.github.io/) — Adversarially Trained Models & Benchmarks
-- [**open-unlearning**](https://github.com/locuslab/open-unlearning) — reference implementations of the LLM losses ported here
+| Project | Description |
+|:--|:--|
+| [**MAIR**](https://github.com/Harry24k/MAIR) | Adversarial training framework (NeurIPS'23) |
+| [**Torchattacks**](https://github.com/Harry24k/adversarial-attacks-pytorch) | Adversarial attack library |
+| [**RobustBench**](https://robustbench.github.io/) | Adversarially trained models & benchmarks |
+| [**open-unlearning**](https://github.com/locuslab/open-unlearning) | Reference implementations of the LLM losses ported here |
 
 <br>
 
-## 📝 Citation
+## Citation
 
 If you use this library in your research, please cite:
 
@@ -672,26 +603,22 @@ If you use this library in your research, please cite:
 
 Paper: [NeurIPS 2025](https://neurips.cc/virtual/2025/poster/116406) · [OpenReview](https://openreview.net/forum?id=kAuckbcMvi)
 
-Please also cite the original papers of the methods and benchmarks you use (references are listed next to each
-entry in the registry: `describe("<name>")`, and in `docs/multimodal_papers.md`).
-
----
-
-## 🤝 Contributing
-
-Issues and pull requests are welcome. Adding a new unlearning method:
-
-1. Put training-based methods in `torchunlearn/unlearn/trainers/` (subclass `Unlearner`; sequence methods subclass
-   `SeqUnlearner` in `trainers/seq/`) and non-training methods in `torchunlearn/unlearn/nontrainers/`.
-2. Export the new class from `torchunlearn/unlearn/__init__.py` and add it to `__all__`; register it in
-   `torchunlearn/api/algorithms.py` with its hyper-parameters and modality.
-3. Add a row to the method table of its domain with a link to the original paper.
-4. Report benchmark numbers against the Retrain oracle (vision) or the benchmark's own protocol (LLM / multimodal),
-   and add a CPU test on the tiny models in `tests/`.
+Please also cite the original papers of the methods and benchmarks you use — references are in the registry (`describe("<name>")`) and in [docs/multimodal_papers.md](docs/multimodal_papers.md).
 
 <br>
 
-## 📄 License
+## Contributing
+
+Issues and pull requests are welcome. To add a new unlearning method:
+
+1. Put training-based methods in `torchunlearn/unlearn/trainers/` (subclass `Unlearner`; sequence methods subclass `SeqUnlearner` in `trainers/seq/`) and non-training methods in `torchunlearn/unlearn/nontrainers/`.
+2. Export the class from `torchunlearn/unlearn/__init__.py`, add it to `__all__`, and register it in `torchunlearn/api/algorithms.py` with its hyper-parameters and modality.
+3. Add a row to its domain's method table with a link to the original paper.
+4. Report benchmark numbers against the Retrain oracle (vision) or the benchmark's own protocol (LLM / multimodal), and add a CPU test on the tiny models in `tests/`.
+
+<br>
+
+## License
 
 Released under the [MIT License](LICENSE).
 
