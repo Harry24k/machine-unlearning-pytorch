@@ -17,7 +17,6 @@ Base class for all trainers.
 
 """
 
-
 def _torch_load(path, map_location=None):
     """torch.load that works across the PyTorch 2.6 weights_only default flip.
 

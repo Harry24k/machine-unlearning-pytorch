@@ -124,6 +124,5 @@ def main():
     torch.manual_seed(a.seed)
     a.fn(a)
 
-
 if __name__ == "__main__":
     main()

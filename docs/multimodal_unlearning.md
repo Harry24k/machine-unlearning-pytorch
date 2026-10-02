@@ -1,6 +1,6 @@
-# Multimodal (image+text) and LLM unlearning in torchunlearn
+# Multimodal (VLM) and LLM unlearning
 
-2026-10-01. One implementation of every token-level method serves plain LLMs **and** vision-language models.
+Implementation of every token-level method serves plain LLMs **and** vision-language models.
 The modality lives in the model wrapper and the collator; the methods only see `labels` (-100 outside the
 answer) and forward whatever other tensors the processor produced (`pixel_values`, `image_grid_thw`, ...).
 
@@ -22,7 +22,7 @@ answer) and forward whatever other tensors the processor produced (`pixel_values
 MM-Finetune (build the model to unlearn from / retrain / retain-only FT), MM-GradAscent, MM-GradDiff, MM-NPO,
 MM-SimNPO, MM-DPO, MM-AltPO, MM-WGA, MM-SatImp, MM-UNDIAL, MM-PDU, MM-FLAT, MM-RMU.
 
-2026-10-02, multimodal-paper methods (see `docs/multimodal_papers.md` for the venue table and fidelity notes):
+Multimodal-paper methods (see `docs/multimodal_papers.md` for the venue table and fidelity notes):
 MM-PO, MM-KLMin (FIUBench / MLLMU baselines), MM-SIU (NeurIPS 2024), MM-ASRUSteer + MM-ASRU (ICML 2026),
 MM-SafetyMirage-NPO / -RMU (ICLR 2026), `LUMoE` (ICML 2026, class API), CLIP track: CLIP-SLUG (ICML 2025),
 `ADU` (NeurIPS 2025).  Benchmarks: FIUBench, MLLMU-Bench, UMU-Bench, CLEAR, MLUBench, MMUBench, VLGuard recipes in
@@ -40,18 +40,18 @@ from torchunlearn import SeqRobModel, SeqUnlearningEvaluator
 from torchunlearn.unlearn.seq_data import from_llava_json, split_forget_retain, SeqCollator, build_unlearn_loaders, strip_images
 from torchunlearn.unlearn.trainers.seq import NPO
 
-model = SeqRobModel.from_pretrained("llava-hf/llava-1.5-7b-hf", device="cuda:0", trainable="lm")   # or "lora:r=16,target=lm"
+m = SeqRobModel.from_pretrained("llava-hf/llava-1.5-7b-hf", device="cuda:0", trainable="lm")   # or "lora:r=16,target=lm"
 data = from_llava_json("train.json", image_root="imgs", group_key="id")
 forget, retain = split_forget_retain(data, by="group", ratio=0.1, seed=0)
 
-col = SeqCollator(model, alt_text="[REDACTED]")                      # answer-only labels; alt_* for DPO/FLAT
+col = SeqCollator(m, alt_text="[REDACTED]")                      # answer-only labels; alt_* for DPO/FLAT
 loaders = build_unlearn_loaders(forget, retain, col, batch_size=4)
 ev = SeqUnlearningEvaluator({"Forget": forget, "Retain": retain, "Forget_noimg": strip_images(forget)}, col)
 
-u = NPO(model, beta=0.1, alpha=1.0).set_evaluator(ev)
+u = NPO(m, beta=0.1, alpha=1.0).set_evaluator(ev)
 u.setup(optimizer="AdamW(lr=1e-5)", n_epochs=5)
 u.fit(loaders, n_epochs=5)            # prints before/after tables; u.results, u.history
-model.save_pretrained("runs/npo/model")
+m.save_pretrained("runs/npo/model")
 ```
 
 Fine-tuning first (base checkpoint → model that knows the data):
@@ -59,7 +59,7 @@ Fine-tuning first (base checkpoint → model that knows the data):
 ```python
 from torchunlearn.unlearn.trainers.seq import SeqFinetune
 from torchunlearn.unlearn.seq_data import make_loader
-SeqFinetune(model, trainable="lm").setup(optimizer="AdamW(lr=2e-5)").fit(make_loader(data, col, batch_size=8), n_epochs=3)
+SeqFinetune(m, trainable="lm").setup(optimizer="AdamW(lr=2e-5)").fit(make_loader(data, col, batch_size=8), n_epochs=3)
 ```
 
 ## Usage (CLI)
@@ -102,36 +102,9 @@ commands (the collator just has no images).
 - **Saving is HF format** (`save_pretrained`); never pass `save_path` to `fit` (it would dump `.pth` of a 7B model).
   A LoRA run saves an adapter dir; `from_pretrained` on it loads the base and merges.
 
-## Verified
-
-- CPU: `python -m pytest tests/test_seq_smoke.py -q` → 24 passed (2026-10-01): mask invariants, loss depends on
-  the answer, all 12 methods on the tiny LLaVA (only declared parameters move; RMU moves exactly its 3 MLP
-  out-projections), 5 methods on the tiny Llama, `ref_mode` cache == model, FT memorises then GA forgets,
-  save/reload logits equal, LoRA adapter round-trip.
-- CLI on CPU (tiny LLaVA): `finetune` -> `unlearn --method MM-DPO --split groups:p0 --save-model` -> `eval` on the
-  saved model, all through `scripts/run_mm.py`.
-- GPU0 (shared H200, `--mem-fraction`), `llava-hf/llava-1.5-7b-hf`, VLGuard LLaVA-format JSON
-  (`_[26SS]MultiModal/unlearn_data_npo`, 8 forget / 8 retain, batch 2, 2026-10-01):
-
-  | run | trainable | grad ckpt | peak / cap | result |
-  |---|---|---|---|---|
-  | MM-NPO, 2 epochs, lr 1e-4 | `lora:r=8,alpha=16,target=lm` (20.0M) | on | < 49 GB cap | Forget lp -0.62 -> -0.84, Retain -1.38 -> -1.43, text-only probe -1.01 -> -1.09; ROUGE-L / EM / includes and generations recorded; adapter saved and reloads |
-  | MM-RMU layer 7, 2 epochs | 3 x down_proj (135M) | on | 14.2 GB peak measured | grad norms on exactly layers 5/6/7 down_proj; Forget lp -0.62 -> -0.61 (RMU needs many more steps, as in the LLM pilot) |
-  | MM-GradDiff, 1 epoch, lr 1e-5 | `lm` = all 6.74B LM params | on | < 70 GB cap | Forget lp -0.62 -> -0.89, Retain -1.38 -> -0.71 |
-
-  Without gradient checkpointing the same NPO run OOMed at a 42 GB cap (forget + retain graphs are alive together),
-  so `--grad-ckpt` is the practical default for 7B models.
-
 ## Model support (base env transformers 4.57.6)
 
 Any `AutoModelForImageTextToText` family: LLaVA-1.5/NeXT/OneVision, Qwen2-VL / Qwen2.5-VL, Idefics2/3, SmolVLM,
 InternVL (HF port), Gemma-3, PaliGemma, Pixtral/Mistral-3, mllama, Phi-4-MM.  Qwen3.5 / Qwen3-VL need a
 transformers 5.x env (see `chaewon-pod-hard-constraints`).  CLIP / SigLIP / BLIP are *not* covered: they have no
 token NLL, so the 12 methods do not apply as-is (contrastive variants are a separate track).
-
-## Not yet
-
-- Vision-side adversarial methods (ARU / AMUN / BoundaryShrink) need a differentiable preprocessing path
-  (mmforge SPEC §3).  Not started.
-- MLLMU-Bench / CLEAR recipes: use `from_hf(..., fields=...)` for now; dedicated recipe helpers are a follow-up.
-- Gradient accumulation / DeepSpeed in the seq trainer.
