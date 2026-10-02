@@ -28,11 +28,16 @@ setuptools.setup(
         "unlearning", "machine unlearning", "mu", "pytorch", "torch",
         "finetune", "neggrad", "randomlabel", "influence", "fisherforget",
         "salun", "scrub", "negmerge", "uam",
+        "llm unlearning", "multimodal unlearning", "vision-language", "npo", "rmu", "clip",
     ],
     # All of these are imported at `import torchunlearn` time:
     #   rm.py -> matplotlib;  _vis.py -> pandas, matplotlib
     #   metrics -> utils.mia -> scikit-learn
     #   nontrainers/* -> tqdm;  attacks/* -> scipy
+    extras_require={
+        # LLM / multimodal tracks (SeqRobModel, CLIPRobModel, benchmark recipes)
+        "llm": ["transformers>=4.45", "peft>=0.10", "datasets>=2.18", "Pillow", "accelerate"],
+    },
     install_requires=[
         "torch>=1.7.1",
         "torchvision>=0.8.2",
