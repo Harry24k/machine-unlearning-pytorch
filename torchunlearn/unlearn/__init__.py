@@ -81,6 +81,22 @@ from .nontrainers.rem import (
     REMConv2d,
 )
 
+
+# --- LLM, span-level (PII) forgetting: LLMRobModel + LLM-* methods ---
+from .trainers.llm_pii import (LLMRobModel, LLMUnlearner, LLM_TRAINERS)
+from .nontrainers.revs import REVS
+from .nontrainers.amnesiac import Amnesiac
+from . import llm_data
+
+# --- Sequence track shared by text LLMs and image+text LVLMs (MM-* methods) ---
+from . import seq_data
+from .trainers import seq
+from .trainers.seq import SeqUnlearner, SeqFinetune, SEQ_TRAINERS
+
+# --- CLIP / dual-encoder track ---
+from .nontrainers.slug import SLUG, make_clip_loader
+from . import clip, recipes
+
 # --- Engine & utilities ---
 from .trainer import Trainer
 from .rm import RecordManager
@@ -97,6 +113,12 @@ __all__ = [
     "rem_unlearn", "expand_model_for_rem", "drop_rem_expansion",
     "set_rem_trainable", "make_mask_assignment", "IndexedDataset",
     "REMConfig", "accuracy_base_only", "rem_forward", "REMLinear", "REMConv2d",
+    # LLM span-level
+    "LLMRobModel", "LLMUnlearner", "LLM_TRAINERS", "REVS", "Amnesiac", "llm_data",
+    # sequence track (LLM + LVLM)
+    "seq_data", "seq", "SeqUnlearner", "SeqFinetune", "SEQ_TRAINERS",
+    # CLIP track
+    "SLUG", "make_clip_loader", "clip", "recipes",
     # engine
     "Trainer", "RecordManager",
 ]

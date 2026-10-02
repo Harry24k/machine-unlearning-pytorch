@@ -137,3 +137,8 @@ class UnlearningEvaluator:
 
 
 __all__ = ["UnlearningEvaluator"]
+
+
+# --- sequence models (text LLM / image+text LVLM) and multimodal benchmarks ---
+from .seq import SeqUnlearningEvaluator  # noqa: E402
+from . import mm_bench, judge  # noqa: E402
