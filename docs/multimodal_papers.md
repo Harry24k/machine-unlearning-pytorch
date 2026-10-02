@@ -1,11 +1,11 @@
-# Multimodal (VLM) unlearning papers at ICLR / ICML / NeurIPS 2024-2026 in torchunlearn
+# Multimodal (VLM) unlearning 
 
-Survey date 2026-10-02.  Scope = main-track papers of the three venues whose subject is unlearning in
-vision-language models (LVLM or CLIP-style).  NeurIPS 2026 acceptances were not yet published on neurips.cc at the
-survey date, so "2026" covers ICLR 2026 and ICML 2026; the strongest 2026 preprints are listed at the end as
-candidates.  Fidelity levels: **official** = ported from released code, **paper** = re-implemented from the paper's
-equations (no code consulted or none released), **recipe** = the paper's contribution is data / protocol on top of
-an existing method, **not implemented** with the reason.
+Unlearning vision-language models (LVLM or CLIP-style).
+Fidelity levels: 
+**official** = ported from released code
+**paper** = re-implemented from the paper's equations (no code consulted or none released)
+**recipe** = the paper's contribution is data / protocol on top of an existing method
+**not implemented** with the reason.
 
 | venue | paper | what it is | torchunlearn entry | fidelity |
 |---|---|---|---|---|
