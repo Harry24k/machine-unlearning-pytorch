@@ -36,7 +36,7 @@ from torch.utils.data import DataLoader, Dataset
 IGNORE = -100
 
 
-# ================================================================================ sample schema
+# sample schema
 @dataclass
 class SeqSample:
     prompt: str
@@ -71,7 +71,7 @@ def strip_images(samples: Iterable[SeqSample]) -> List[SeqSample]:
     return [s.without_images() for s in samples]
 
 
-# ================================================================================ recipes
+# recipes
 def from_records(rows: Iterable[dict], fields: Optional[Dict[str, str]] = None, image_root: Optional[str] = None,
                  ) -> List[SeqSample]:
     """Generic mapping.  fields maps SeqSample attribute -> record key, e.g.
@@ -197,7 +197,7 @@ def split_forget_retain(samples: Sequence[SeqSample], by: str = "random", ratio:
     raise ValueError(by)
 
 
-# ================================================================================ dataset / collator
+# dataset / collator
 class SeqDataset(Dataset):
     """Holds samples; the collator does the tokenisation.  ``alt_k`` rotates alternates per epoch (AltPO)."""
 
@@ -284,7 +284,7 @@ class SeqCollator:
             txt += answer + (self.tok.eos_token if (self.add_eos and self.tok.eos_token) else "")
         return txt
 
-    # ---------------------------------------------------------------- processor calls
+    # processor calls
     def encode(self, samples: Sequence[SeqSample], answers: Sequence[Optional[str]], padding_side: str = "right"
                ) -> Dict[str, torch.Tensor]:
         texts = [self.render(s, a) for s, a in zip(samples, answers)]
